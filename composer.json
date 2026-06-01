@@ -1,0 +1,27 @@
+{
+    "name": "4geo35/catalog-exchange",
+    "description": "Parse xml files from 1C",
+    "minimum-stability": "dev",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vladimir",
+            "email": "aweram-team@yandex.ru"
+        }
+    ],
+    "require": {
+        "4geo35/category-product": "@dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "GIS\\CatalogExchange\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "GIS\\CatalogExchange\\CatalogExchangeServiceProvider"
+            ]
+        }
+    }
+}
