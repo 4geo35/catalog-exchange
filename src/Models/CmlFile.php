@@ -2,6 +2,7 @@
 
 namespace GIS\CatalogExchange\Models;
 
+use GIS\CatalogExchange\Facades\ExchangeLoadFileActions;
 use Illuminate\Database\Eloquent\Model;
 
 class CmlFile extends Model
@@ -10,8 +11,12 @@ class CmlFile extends Model
     public $incrementing = false;
     protected $fillable = [
         "path",
-        "type",
         "original_name",
         "completed_at",
     ];
+
+    public function getTypeAttribute(): string
+    {
+        return ExchangeLoadFileActions::getFileTypeByName($this->original_name);
+    }
 }

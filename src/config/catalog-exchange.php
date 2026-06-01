@@ -8,11 +8,15 @@ return [
     "customCmlFileModel" => null,
     "customCmlFileModelObserver" => null,
 
+    // Managers
+    "customExchangeLoadFileActionsManager" => null,
+
     // Controllers
     "customAdminCmlController" => null,
 
     // Components
     "customAdminCmlIndexComponent" => null,
+    "customAdminCmlFileListComponent" => null,
 
     // Policies
     "cmlPolicy" => \GIS\CatalogExchange\Policies\CmlPolicy::class,

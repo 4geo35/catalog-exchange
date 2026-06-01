@@ -16,7 +16,6 @@ return new class extends Migration
                 ->unique();
             $table->uuid("cml_id");
             $table->string("path");
-            $table->string("type");
             $table->string("original_name");
             $table->dateTime("completed_at")
                 ->nullable();

@@ -2,6 +2,7 @@
     <x-slot name="head">
         <tr>
             <x-tt::table.heading class="text-left text-nowrap">UUID</x-tt::table.heading>
+            <x-tt::table.heading class="text-left text-nowrap">Файлы</x-tt::table.heading>
             <x-tt::table.heading class="text-left text-nowrap">Архив</x-tt::table.heading>
             <x-tt::table.heading>Действия</x-tt::table.heading>
         </tr>
@@ -15,10 +16,21 @@
                         {{ $item->created_human }}
                     </div>
                 </td>
+                <td>{{ $item->files->count() }}</td>
                 <td>{{ $item->is_zip ? "Да" : "Нет" }}</td>
                 <td>
                     <div class="flex justify-center">
-                        <button type="button" class="btn btn-danger px-btn-x-ico"
+                        @can("viewAny", $item::class)
+                            <a href="{{ route('admin.cmls.show', ['cml' => $item]) }}"
+                               class="btn btn-primary px-btn-ico-text rounded-e-none">
+                                <x-tt::ico.eye/>
+                            </a>
+                        @else
+                            <button type="button" class="btn btn-primary px-btn-x-ico rounded-e-none" disabled>
+                                <x-tt::ico.eye/>
+                            </button>
+                        @endcan
+                        <button type="button" class="btn btn-danger px-btn-x-ico rounded-s-none"
                                 @cannot("delete", $item) disabled
                                 @else wire:loading.attr="disabled"
                                 @endcannot

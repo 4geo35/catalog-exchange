@@ -12,5 +12,6 @@ Route::middleware(["web", "auth", "app-management"])
             ->group(function () {
                 $controllerClass = config("catalog-exchange.customAdminCmlController") ?? CmlController::class;
                 Route::get("/", [$controllerClass, "index"])->name("index");
+                Route::get("/{cml}", [$controllerClass, "show"])->name("show");
             });
     });
