@@ -10,4 +10,12 @@ return [
 
     // Controllers
     "customAdminCmlController" => null,
+
+    // Components
+    "customAdminCmlIndexComponent" => null,
+
+    // Policies
+    "cmlPolicy" => \GIS\CatalogExchange\Policies\CmlPolicy::class,
+    "cmlPolicyKey" => "cmls",
+    "cmlPolicyTitle" => "CommerceML",
 ];

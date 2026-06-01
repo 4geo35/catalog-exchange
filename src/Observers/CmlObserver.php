@@ -12,7 +12,7 @@ class CmlObserver
     {
         $uuid = Str::uuid();
         $modelClass = config("catalog-exchange.customCmlModel") ?? Cml::class;
-        while ($modelClass::query()->where('uuid', $uuid)->exists()) {
+        while ($modelClass::query()->where('id', $uuid)->exists()) {
             $uuid = Str::uuid();
         }
         $cml->id = $uuid;
