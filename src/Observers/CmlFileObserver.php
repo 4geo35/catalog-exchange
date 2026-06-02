@@ -18,9 +18,4 @@ class CmlFileObserver
         }
         $file->id = $uuid;
     }
-
-    public function deleted(CmlFileInterface $file): void
-    {
-        if (Storage::has($file->path)) { Storage::delete($file->path); }
-    }
 }

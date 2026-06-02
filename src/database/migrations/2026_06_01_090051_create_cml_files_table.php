@@ -15,7 +15,7 @@ return new class extends Migration
             $table->uuid("id")
                 ->unique();
             $table->uuid("cml_id");
-            $table->string("path");
+            $table->unsignedBigInteger("file_id")->nullable();
             $table->string("original_name");
             $table->dateTime("completed_at")
                 ->nullable();

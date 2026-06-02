@@ -2,11 +2,12 @@
 
 namespace GIS\CatalogExchange\Livewire\Admin\CmlFiles;
 
+use GIS\CatalogExchange\Facades\ExchangeLoadFileActions;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
-use GIS\CatalogExchange\Models\Cml;
 use GIS\CatalogExchange\Models\CmlFile;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
@@ -20,14 +21,24 @@ class ListWire extends Component
     #[Locked]
     public CmlInterface $cml;
 
+    public array $typeList;
+
     public bool $displayDelete = false;
+    public string|null $fileId = null;
 
     public TemporaryUploadedFile|null $cmlFile = null;
+    public string $fileType = "";
+
+    public function __construct()
+    {
+        $this->typeList = ExchangeLoadFileActions::getAvailableFileTypes();
+    }
 
     public function rules(): array
     {
         return [
             "cmlFile" => ["required", "file"],
+            "fileType" => ["nullable", Rule::in($this->typeList)],
         ];
     }
 
@@ -35,12 +46,17 @@ class ListWire extends Component
     {
         return [
             "cmlFile" => "Файл",
+            "fileType" => "Тип файла",
         ];
     }
 
     public function render(): View
     {
-        $files = $this->cml->files()->orderBy('created_at', 'desc')->get();
+        $files = $this->cml->files()
+            ->with(["file"])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         return view("cexc::livewire.admin.cml-files.list-wire", compact("files"));
     }
 
@@ -49,7 +65,14 @@ class ListWire extends Component
         if (! $this->checkAuth()) { return; }
         $this->validate();
 
-        
+        $fileName = empty($this->fileType) ? $this->cmlFile->getClientOriginalName() : $this->fileType;
+        $cmlFile = $this->cml->files()->create([
+            "original_name" => $fileName,
+        ]);
+        /**
+         * @var CmlFileInterface $cmlFile
+         */
+        $cmlFile->livewireFile($this->cmlFile);
 
         $this->resetFields();
         session()->flash("cml-files-success", "Файл успешно добавлен");
@@ -61,11 +84,49 @@ class ListWire extends Component
         $this->displayDelete = false;
     }
 
-    protected function resetFields(): void
+    public function showDelete(string $modelId): void
     {
-        $this->reset("cmlFile");
+        $this->resetFields();
+        $this->fileId = $modelId;
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        $this->displayDelete = true;
     }
 
+    public function confirmDelete(): void
+    {
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+
+        try {
+            $model->delete();
+        } catch (\Exception $exception) {
+            session()->flash("cml-files-error", "Ошибка при удалении файла");
+            $this->closeDelete();
+            return;
+        }
+
+        session()->flash("cml-files-success", "Файл успешно удален");
+        $this->closeDelete();
+    }
+
+    protected function findModel(): ?CmlFileInterface
+    {
+        $modelClass = config("catalog-exchange.customCmlFileModel") ?? CmlFile::class;
+        $model = $modelClass::query()->find($this->fileId);
+        if (! $model) {
+            session()->flash("cml-files-error", "Файл не найден");
+            $this->closeDelete();
+            return null;
+        }
+        return $model;
+    }
+    protected function resetFields(): void
+    {
+        $this->reset("cmlFile", "fileType", "fileId");
+    }
 
     protected function checkAuth(): bool
     {

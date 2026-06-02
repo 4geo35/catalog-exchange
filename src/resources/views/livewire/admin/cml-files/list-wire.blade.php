@@ -6,4 +6,6 @@
             <x-tt::notifications.success prefix="cml-files-" />
         </div>
     </div>
+    @include("cexc::admin.cml-files.includes.table")
+    @include("cexc::admin.cml-files.includes.table-modals")
 </div>

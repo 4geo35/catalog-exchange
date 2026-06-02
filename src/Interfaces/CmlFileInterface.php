@@ -3,6 +3,7 @@
 namespace GIS\CatalogExchange\Interfaces;
 
 use ArrayAccess;
+use GIS\Fileable\Interfaces\ShouldFileInterface;
 use JsonSerializable;
 use Stringable;
 use Illuminate\Contracts\Broadcasting\HasBroadcastChannel;
@@ -13,6 +14,7 @@ use Illuminate\Contracts\Support\CanBeEscapedWhenCastToString;
 use Illuminate\Contracts\Support\Jsonable;
 
 interface CmlFileInterface extends Arrayable, ArrayAccess, CanBeEscapedWhenCastToString,
-    HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable
+    HasBroadcastChannel, Jsonable, JsonSerializable, QueueableEntity, Stringable, UrlRoutable,
+    ShouldFileInterface
 {
 }
