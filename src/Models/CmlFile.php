@@ -7,6 +7,8 @@ use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\Fileable\Traits\ShouldFile;
 use GIS\TraitsHelpers\Traits\ShouldHumanDate;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class CmlFile extends Model implements CmlFileInterface
@@ -22,6 +24,18 @@ class CmlFile extends Model implements CmlFileInterface
         "completed_at",
     ];
 
+    public function cml(): BelongsTo
+    {
+        $modelClass = config("catalog-exchange.customCmlModel") ?? Cml::class;
+        return $this->belongsTo($modelClass);
+    }
+
+    public function progressBars(): HasMany
+    {
+        $modelClass = config("catalog-exchange.customCmlFileProgressBarModel") ?? CmlFileProgressBar::class;
+        return $this->hasMany($modelClass, "cml_file_id");
+    }
+
     public function getTypeAttribute(): string
     {
         return ExchangeLoadFileActions::getFileTypeByName($this->original_name);
@@ -34,6 +48,11 @@ class CmlFile extends Model implements CmlFileInterface
         if ($this->launched_at) { $state = "running"; }
         if ($this->completed_at) { $state = "completed"; }
         return $state;
+    }
+
+    public function getCanParseAttribute(): bool
+    {
+        return ! in_array($this->type, ["zip", "undefined"]);
     }
 
     public function getCanRunAttribute(): bool
@@ -54,6 +73,11 @@ class CmlFile extends Model implements CmlFileInterface
     public function getFormatSizeAttribute(): string
     {
         return size2word($this->size);
+    }
+
+    public function getFullPathAttribute(): string
+    {
+        return Storage::path($this->file->path);
     }
 
     public function getStartedMoscowAttribute()

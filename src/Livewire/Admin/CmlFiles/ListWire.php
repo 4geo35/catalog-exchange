@@ -77,6 +77,8 @@ class ListWire extends Component
          */
         $cmlFile->livewireFile($this->cmlFile);
 
+        // TODO: check zip files
+
         $this->resetFields();
         session()->flash("cml-files-success", "Файл успешно добавлен");
     }

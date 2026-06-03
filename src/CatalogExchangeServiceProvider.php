@@ -2,14 +2,20 @@
 
 namespace GIS\CatalogExchange;
 
+use GIS\CatalogExchange\Events\FireExchangeFileEvent;
+use GIS\CatalogExchange\Helpers\ExchangeItemsActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeLoadFileActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeParserActionsManager;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
+use GIS\CatalogExchange\Listeners\FireProcessExchangeFileListener;
 use GIS\CatalogExchange\Models\Cml;
 use GIS\CatalogExchange\Models\CmlFile;
+use GIS\CatalogExchange\Models\CmlFileProgressBar;
 use GIS\CatalogExchange\Observers\CmlFileObserver;
+use GIS\CatalogExchange\Observers\CmlFileProgressBarObserver;
 use GIS\CatalogExchange\Observers\CmlObserver;
 use GIS\UserManagement\Traits\ExpandPoliciesTrait;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use GIS\CatalogExchange\Livewire\Admin\Cmls\IndexWire as AdminCmlIndexWire;
@@ -39,6 +45,8 @@ class CatalogExchangeServiceProvider extends ServiceProvider
         $this->setPolicies();
 
         $this->addLivewireComponents();
+
+        $this->listenEvents();
     }
 
     protected function expandConfiguration(): void
@@ -61,6 +69,11 @@ class CatalogExchangeServiceProvider extends ServiceProvider
 
         $this->app->singleton("exchange-parser-actions", function () {
             $managerClass = config("catalog-exchange.customExchangeParserActionsManager") ?? ExchangeParserActionsManager::class;
+            return new $managerClass();
+        });
+
+        $this->app->singleton("exchange-items-actions", function () {
+            $managerClass = config("catalog-exchange.customExchangeItemsActionsManager") ?? ExchangeItemsActionsManager::class;
             return new $managerClass();
         });
     }
@@ -95,5 +108,16 @@ class CatalogExchangeServiceProvider extends ServiceProvider
         $modelClass = config("catalog-exchange.customCmlFileModel") ?? CmlFile::class;
         $observerClass = config("catalog-exchange.customCmlFileModelObserver") ?? CmlFileObserver::class;
         $modelClass::observe($observerClass);
+
+        $modelClass = config("catalog-exchange.customCmlFileProgressBarModel") ?? CmlFileProgressBar::class;
+        $observerClass = config("catalog-exchange.customCmlFileProgressBarModelObserver") ?? CmlFileProgressBarObserver::class;
+        $modelClass::observe($observerClass);
+    }
+
+    protected function listenEvents(): void
+    {
+        $listenerClass = config("catalog-exchange.customFireProcessExchangeFileListener") ??
+            FireProcessExchangeFileListener::class;
+        Event::listen(FireExchangeFileEvent::class, $listenerClass);
     }
 }

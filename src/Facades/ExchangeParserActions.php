@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @method static void fireParseFile(CmlFileInterface $file)
  * @method static void stopParseFile(CmlFileInterface $file)
+ * @method static void launchParseFile(CmlFileInterface $file)
+ * @method static void completeParseFile(CmlFileInterface $file)
+ *
+ * @method static array|null getImportCategoriesMap()
+ * @method static array|null getImportProductsMap()
  *
  * @see ExchangeParserActionsManager
  */
