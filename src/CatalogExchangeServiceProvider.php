@@ -3,6 +3,7 @@
 namespace GIS\CatalogExchange;
 
 use GIS\CatalogExchange\Helpers\ExchangeLoadFileActionsManager;
+use GIS\CatalogExchange\Helpers\ExchangeParserActionsManager;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
 use GIS\CatalogExchange\Models\Cml;
 use GIS\CatalogExchange\Models\CmlFile;
@@ -55,6 +56,11 @@ class CatalogExchangeServiceProvider extends ServiceProvider
     {
         $this->app->singleton("exchange-load-file-actions", function () {
             $managerClass = config("catalog-exchange.customExchangeLoadFileActionsManager") ?? ExchangeLoadFileActionsManager::class;
+            return new $managerClass();
+        });
+
+        $this->app->singleton("exchange-parser-actions", function () {
+            $managerClass = config("catalog-exchange.customExchangeParserActionsManager") ?? ExchangeParserActionsManager::class;
             return new $managerClass();
         });
     }

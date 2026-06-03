@@ -10,6 +10,7 @@ return [
 
     // Managers
     "customExchangeLoadFileActionsManager" => null,
+    "customExchangeParserActionsManager" => null,
 
     // Controllers
     "customAdminCmlController" => null,

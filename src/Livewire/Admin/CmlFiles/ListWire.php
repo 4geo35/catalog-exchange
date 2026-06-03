@@ -3,6 +3,7 @@
 namespace GIS\CatalogExchange\Livewire\Admin\CmlFiles;
 
 use GIS\CatalogExchange\Facades\ExchangeLoadFileActions;
+use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
 use GIS\CatalogExchange\Models\CmlFile;
@@ -24,6 +25,8 @@ class ListWire extends Component
     public array $typeList;
 
     public bool $displayDelete = false;
+    public bool $displayRun = false;
+    public bool $displayStop = false;
     public string|null $fileId = null;
 
     public TemporaryUploadedFile|null $cmlFile = null;
@@ -112,6 +115,66 @@ class ListWire extends Component
         $this->closeDelete();
     }
 
+    public function closeRun(): void
+    {
+        $this->resetFields();
+        $this->displayRun = false;
+    }
+
+    public function showRun(string $modelId): void
+    {
+        $this->resetFields();
+        $this->fileId = $modelId;
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        if (! $this->canRun($model)) { return; }
+        $this->displayRun = true;
+    }
+
+    public function confirmRun(): void
+    {
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        if (! $this->canRun($model)) { return; }
+
+        ExchangeParserActions::fireParseFile($model);
+
+        session()->flash("cml-files-success", "Файл передан в очередь обработки");
+        $this->closeRun();
+    }
+
+    public function closeStop(): void
+    {
+        $this->resetFields();
+        $this->displayStop = false;
+    }
+
+    public function showStop(string $modelId): void
+    {
+        $this->resetFields();
+        $this->fileId = $modelId;
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        if (! $this->canStop($model)) { return; }
+        $this->displayStop = true;
+    }
+
+    public function confirmStop(): void
+    {
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        if (! $this->canStop($model)) { return; }
+
+        ExchangeParserActions::stopParseFile($model);
+
+        session()->flash("cml-files-success", "Послан сигнал остановки обработки файла");
+        $this->closeStop();
+    }
+
     protected function findModel(): ?CmlFileInterface
     {
         $modelClass = config("catalog-exchange.customCmlFileModel") ?? CmlFile::class;
@@ -126,6 +189,20 @@ class ListWire extends Component
     protected function resetFields(): void
     {
         $this->reset("cmlFile", "fileType", "fileId");
+    }
+
+    protected function canRun(CmlFileInterface $file): bool
+    {
+        if ($file->can_run) { return true; }
+        session()->flash("cml-files-error", "Файл обрабатывается");
+        return false;
+    }
+
+    protected function canStop(CmlFileInterface $file): bool
+    {
+        if ($file->can_stop) { return true; }
+        session()->flash("cml-files-error", "Файл не обрабатывается");
+        return false;
     }
 
     protected function checkAuth(): bool

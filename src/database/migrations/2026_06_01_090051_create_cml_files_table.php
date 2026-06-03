@@ -17,8 +17,11 @@ return new class extends Migration
             $table->uuid("cml_id");
             $table->unsignedBigInteger("file_id")->nullable();
             $table->string("original_name");
-            $table->dateTime("completed_at")
-                ->nullable();
+
+            $table->dateTime("started_at")->nullable();
+            $table->dateTime("launched_at")->nullable();
+            $table->dateTime("completed_at")->nullable();
+
             $table->timestamps();
         });
     }
