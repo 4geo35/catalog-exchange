@@ -4,12 +4,15 @@ return [
     // Settings
     "useQueue" => true,
 
-    // Import XML
-    "importXml" => [
-        "categories" => "Классификатор->Группы->Группа",
-        "subCategories" => "Группы->Группа",
-        "products" => "Каталог->Товары->Товар",
+    // Import XML TODO: change to env
+    "importXmlCategories" => "Классификатор->Группы->Группа",
+    "importXmlSubCategories" => "Группы->Группа",
+    "importXmlCategory" => [
+        "id" => "Ид",
+        "title" => "Наименование",
     ],
+
+    "importXmlProducts" => "Каталог->Товары->Товар",
 
     // Models
     "customCmlModel" => null,

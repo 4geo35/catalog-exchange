@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Facade;
  * @method static void completeParseFile(CmlFileInterface $file)
  *
  * @method static array|null getImportCategoriesMap()
+ * @method static array|null getImportSubCategoriesMap()
+ * @method static array|null getImportCategoryIdMap()
+ * @method static array|null getImportCategoryTitleMap()
+ *
  * @method static array|null getImportProductsMap()
  *
  * @see ExchangeParserActionsManager

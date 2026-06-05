@@ -5,11 +5,17 @@ namespace GIS\CatalogExchange\Helpers;
 use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Interfaces\CmlFileProgressBarInterface;
+use GIS\CatalogExchange\Traits\ExchangeCategoryTrait;
+use GIS\CatalogExchange\Traits\ProgressBarTrait;
+use GIS\CategoryProduct\Interfaces\CategoryInterface;
+use GIS\CategoryProduct\Models\Category;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
 class ExchangeItemsActionsManager
 {
+    use ProgressBarTrait, ExchangeCategoryTrait;
+
     public CmlFileInterface $cmlFile;
 
     public string|null $type = null;
@@ -19,8 +25,6 @@ class ExchangeItemsActionsManager
     public SimpleXMLElement|null $products = null;
 
     public bool $onlyChanges = false;
-
-    public CmlFileProgressBarInterface|null $progressBar = null;
 
     public function processFile(CmlFileInterface $cmlFile): void
     {
@@ -50,6 +54,14 @@ class ExchangeItemsActionsManager
         }
     }
 
+    public function findCategoryByUuid(string $uuid): ?CategoryInterface
+    {
+        $modelClass = config("category-product.customCategoryModel") ?? Category::class;
+        return $modelClass::query()
+            ->where("exchange_uuid", $uuid)
+            ->first();
+    }
+
     protected function isNeedToStop(): bool
     {
         $this->cmlFile->refresh();
@@ -59,45 +71,10 @@ class ExchangeItemsActionsManager
     protected function processImport(): void
     {
         if ($this->categories) {
-            debugbar()->info($this->categories->count());
+            $this->setProgressBar("categories", $this->categories->count());
+            $this->processCategories($this->categories);
+            $this->closeProgressBar();
         }
-    }
-
-    protected function setCommand(string $type, int $total = 0): void
-    {
-        $this->progressBar = $this->cmlFile->progressBars()->create([
-            'total' => $total,
-            "type" => $type,
-        ]);
-    }
-
-    protected function increasePending(): void
-    {
-        if (! $this->progressBar) { return; }
-        $pending = $this->progressBar->pending;
-        $pending++;
-        $this->progressBar->update([
-            'pending' => $pending,
-        ]);
-    }
-
-    protected function increaseTotal(int $increase): void
-    {
-        if (! $this->progressBar) { return; }
-        $total = $this->progressBar->total;
-        $total += $increase;
-        $this->progressBar->update([
-            'total' => $total,
-        ]);
-    }
-
-    protected function closeProgressBar(): void
-    {
-        if (! $this->progressBar) { return; }
-        $this->progressBar->update([
-            "completed_at" => now()
-        ]);
-        $this->progressBar = null;
     }
 
     protected function initDocument(): void

@@ -52,12 +52,27 @@ class ExchangeParserActionsManager
 
     public function getImportCategoriesMap(): ?array
     {
-        return $this->getExplodedConfig("catalog-exchange.importXml.categories");
+        return $this->getExplodedConfig("catalog-exchange.importXmlCategories");
+    }
+
+    public function getImportSubCategoriesMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSubCategories");
+    }
+
+    public function getImportCategoryIdMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlCategory.id");
+    }
+
+    public function getImportCategoryTitleMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlCategory.title");
     }
 
     public function getImportProductsMap(): ?array
     {
-        return $this->getExplodedConfig("catalog-exchange.importXml.products");
+        return $this->getExplodedConfig("catalog-exchange.importXmlProducts");
     }
 
     protected function getExplodedConfig(string $key): ?array
