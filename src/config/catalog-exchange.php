@@ -3,6 +3,8 @@
 return [
     // Settings
     "useQueue" => true,
+    "applyOrder" => true,
+    "autoPublish" => true,
 
     // Import XML TODO: change to env
     "importXmlCategories" => "Классификатор->Группы->Группа",

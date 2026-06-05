@@ -11,13 +11,13 @@ trait ExchangeCategoryTrait
 {
     protected function processCategories(SimpleXMLElement $categories, string $parent = null): void
     {
+        $index = 0;
         foreach ($categories as $category) {
-            $this->processCategory($this->prepareCategory($category, $parent));
+            $this->processCategory($this->prepareCategory($category, $index, $parent));
             $this->increasePending();
+            $index++;
 
-            $subCategoriesMap = ExchangeParserActions::getImportSubCategoriesMap();
-            if (empty($subCategoriesMap)) { continue; }
-            $subCategories = $this->getElementByMap($category, $subCategoriesMap);
+            $subCategories = $this->getSubCategories($category);
             if (empty($subCategories)) { continue; }
 
             $categoryId = $this->getCategoryId($category);
@@ -28,12 +28,13 @@ trait ExchangeCategoryTrait
         }
     }
 
-    protected function prepareCategory(SimpleXMLElement $category, string $parent = null): object
+    protected function prepareCategory(SimpleXMLElement $category, int $index, string $parent = null): object
     {
         return (object) [
             "id" => $this->getCategoryId($category),
             "title" => $this->getCategoryTitle($category),
             "parent" => $parent,
+            "priority" => $index,
         ];
     }
 
@@ -51,6 +52,50 @@ trait ExchangeCategoryTrait
         }
         $category->exchange_uuid = $categoryObject->id;
         $category->exchange_parent_uuid = $categoryObject->parent;
+        if (config("catalog-exchange.applyOrder")) { $category->priority = $categoryObject->priority; }
+        if (config("catalog-exchange.autoPublish")) { $category->published_at = now(); }
+        $category->save();
+    }
+
+    protected function processCategoryParents(SimpleXMLElement $categories): void
+    {
+        foreach ($categories as $category) {
+            $this->processParent($this->getCategoryId($category));
+            $this->increasePending();
+
+            $subCategories = $this->getSubCategories($category);
+            if (empty($subCategories)) { continue; }
+
+            $this->increaseTotal($subCategories->count());
+            $this->processCategoryParents($subCategories);
+        }
+    }
+
+    protected function processParent(string $id = null): void
+    {
+        if (empty($id)) { return; }
+        $category = $this->findCategoryByUuid($id);
+        $oldParent = $category->parent;
+        $newParentId = $category->exchange_parent_uuid;
+        // Если родитель не изменился, то выходим
+        if (! empty($oldParent) && $oldParent->exchange_uuid === $newParentId) { return; }
+        // Если категория стала родительской, трем родителя, если есть, и выходим
+        if (! empty($oldParent) && empty($newParentId)) {
+            $category->parent()->dissociate();
+            $category->save();
+            return;
+        } // Если родитель был пустой и остался пустым, выходим
+        elseif (empty($newParentId)) { return; }
+
+        $parent = $this->findCategoryByUuid($newParentId);
+        // Если не нашли родителя, чистим старого и выходим
+        if (empty($parent)) {
+            $category->parent()->dissociate();
+            $category->save();
+            return;
+        }
+        // Задаем нового родителя
+        $category->parent()->associate($parent);
         $category->save();
     }
 
@@ -84,5 +129,14 @@ trait ExchangeCategoryTrait
         }
 
         return $categoryTitle;
+    }
+
+    protected function getSubCategories(SimpleXMLElement $category): ?SimpleXMLElement
+    {
+        $subCategoriesMap = ExchangeParserActions::getImportSubCategoriesMap();
+        if (empty($subCategoriesMap)) { return null; }
+        $subCategories = $this->getElementByMap($category, $subCategoriesMap);
+        if (empty($subCategories)) { return null; }
+        return $subCategories;
     }
 }

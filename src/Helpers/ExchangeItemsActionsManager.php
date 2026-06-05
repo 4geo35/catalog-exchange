@@ -74,6 +74,10 @@ class ExchangeItemsActionsManager
             $this->setProgressBar("categories", $this->categories->count());
             $this->processCategories($this->categories);
             $this->closeProgressBar();
+
+            $this->setProgressBar("categoryParents", $this->categories->count());
+            $this->processCategoryParents($this->categories);
+            $this->closeProgressBar();
         }
     }
 
