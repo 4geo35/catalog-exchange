@@ -12,19 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void launchParseFile(CmlFileInterface $file)
  * @method static void completeParseFile(CmlFileInterface $file)
  *
- * @method static array|null getImportCategoriesMap()
- * @method static array|null getImportSubCategoriesMap()
- * @method static array|null getImportCategoryIdMap()
- * @method static array|null getImportCategoryTitleMap()
- *
- * @method static array|null getImportSpecificationsMap()
- * @method static array|null getImportSpecificationIdMap()
- * @method static array|null getImportSpecificationTitleMap()
- * @method static array|null getImportSpecificationValuesMap()
- * @method static array|null getImportSpecificationValueIdMap()
- * @method static array|null getImportSpecificationValueValueMap()
- *
- * @method static array|null getImportProductsMap()
+ * @method static array|null getExplodedConfig(string $key)
  *
  * @see ExchangeParserActionsManager
  */

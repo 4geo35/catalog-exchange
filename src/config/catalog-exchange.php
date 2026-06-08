@@ -5,6 +5,7 @@ return [
     "useQueue" => true,
     "applyOrder" => true,
     "autoPublish" => true,
+    "clearSlug" => true,
 
     // Import XML TODO: change to env
     // Categories
@@ -27,6 +28,19 @@ return [
     ],
     // Products
     "importXmlProducts" => "Каталог->Товары->Товар",
+    "importXmlProduct" => [ // Только текстовые значения, автоматически обходит этот массив
+        "id" => "Ид",
+        "title" => "Наименование",
+        "categoryId" => "Группы->Ид",
+        "sku" => "Артикул",
+        "description" => "Описание",
+        "short" => "КраткоеОписание",
+    ],
+    "importXmlProductSpecifications" => "ЗначенияСвойств->ЗначенияСвойства",
+    "importXmlProductSpecification" => [
+        "id" => "Ид",
+        "value" => "Значение",
+    ],
 
     // Models
     "customCmlModel" => null,
