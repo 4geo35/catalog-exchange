@@ -17,6 +17,13 @@ use Illuminate\Support\Facades\Facade;
  * @method static array|null getImportCategoryIdMap()
  * @method static array|null getImportCategoryTitleMap()
  *
+ * @method static array|null getImportSpecificationsMap()
+ * @method static array|null getImportSpecificationIdMap()
+ * @method static array|null getImportSpecificationTitleMap()
+ * @method static array|null getImportSpecificationValuesMap()
+ * @method static array|null getImportSpecificationValueIdMap()
+ * @method static array|null getImportSpecificationValueValueMap()
+ *
  * @method static array|null getImportProductsMap()
  *
  * @see ExchangeParserActionsManager

@@ -70,6 +70,36 @@ class ExchangeParserActionsManager
         return $this->getExplodedConfig("catalog-exchange.importXmlCategory.title");
     }
 
+    public function getImportSpecificationsMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecifications");
+    }
+
+    public function getImportSpecificationIdMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecification.id");
+    }
+
+    public function getImportSpecificationTitleMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecification.title");
+    }
+
+    public function getImportSpecificationValuesMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecificationValues");
+    }
+
+    public function getImportSpecificationValueIdMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecificationValue.id");
+    }
+
+    public function getImportSpecificationValueValueMap(): ?array
+    {
+        return $this->getExplodedConfig("catalog-exchange.importXmlSpecificationValue.value");
+    }
+
     public function getImportProductsMap(): ?array
     {
         return $this->getExplodedConfig("catalog-exchange.importXmlProducts");

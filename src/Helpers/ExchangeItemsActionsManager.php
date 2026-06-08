@@ -6,6 +6,7 @@ use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Interfaces\CmlFileProgressBarInterface;
 use GIS\CatalogExchange\Traits\ExchangeCategoryTrait;
+use GIS\CatalogExchange\Traits\ExchangeSpecificationTrait;
 use GIS\CatalogExchange\Traits\ProgressBarTrait;
 use GIS\CategoryProduct\Interfaces\CategoryInterface;
 use GIS\CategoryProduct\Models\Category;
@@ -14,7 +15,7 @@ use SimpleXMLElement;
 
 class ExchangeItemsActionsManager
 {
-    use ProgressBarTrait, ExchangeCategoryTrait;
+    use ProgressBarTrait, ExchangeCategoryTrait, ExchangeSpecificationTrait;
 
     public CmlFileInterface $cmlFile;
 
@@ -23,6 +24,8 @@ class ExchangeItemsActionsManager
     public SimpleXMLElement|null $document = null;
     public SimpleXMLElement|null $categories = null;
     public SimpleXMLElement|null $products = null;
+
+    public array $specifications = [];
 
     public bool $onlyChanges = false;
 
@@ -70,7 +73,7 @@ class ExchangeItemsActionsManager
 
     protected function processImport(): void
     {
-        if ($this->categories) {
+        if ($this->categories && false) { // TODO: remove false
             $this->setProgressBar("categories", $this->categories->count());
             $this->processCategories($this->categories);
             $this->closeProgressBar();
@@ -79,6 +82,7 @@ class ExchangeItemsActionsManager
             $this->processCategoryParents($this->categories);
             $this->closeProgressBar();
         }
+
     }
 
     protected function initDocument(): void
@@ -115,6 +119,8 @@ class ExchangeItemsActionsManager
         $productsMap = ExchangeParserActions::getImportProductsMap();
         if ($productsMap) { $this->products = $this->getElementByMap($this->document, $productsMap); }
         else { $this->products = null; }
+
+        $this->prepareSpecifications();
 
         if (! empty($this->document->{"Каталог"}->attributes()->{"СодержитТолькоИзменения"})) {
             $value = $this->document->{"Каталог"}->attributes()->{"СодержитТолькоИзменения"}->__toString();

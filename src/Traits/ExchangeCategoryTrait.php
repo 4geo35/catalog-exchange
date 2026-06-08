@@ -102,6 +102,7 @@ trait ExchangeCategoryTrait
     protected function getCategoryId(SimpleXMLElement $category): ?string
     {
         $categoryIdMap = ExchangeParserActions::getImportCategoryIdMap();
+        if (empty($categoryIdMap)) { return null; }
         $categoryId = $this->getElementByMap($category, $categoryIdMap);
         if (empty($categoryId)) { return null; }
 
@@ -118,13 +119,14 @@ trait ExchangeCategoryTrait
     protected function getCategoryTitle(SimpleXMLElement $category): ?string
     {
         $categoryTitleMap = ExchangeParserActions::getImportCategoryTitleMap();
+        if (empty($categoryTitleMap)) { return null; }
         $categoryTitle = $this->getElementByMap($category, $categoryTitleMap);
         if (empty($categoryTitle)) { return null; }
 
         try {
             $categoryTitle = $categoryTitle->__toString();
         } catch (\Exception $exception) {
-            Log::error("Fail to get category ID in {$this->cmlFile->id}: " . $exception->getMessage());
+            Log::error("Fail to get category Title in {$this->cmlFile->id}: " . $exception->getMessage());
             return null;
         }
 

@@ -7,13 +7,25 @@ return [
     "autoPublish" => true,
 
     // Import XML TODO: change to env
+    // Categories
     "importXmlCategories" => "Классификатор->Группы->Группа",
     "importXmlSubCategories" => "Группы->Группа",
     "importXmlCategory" => [
         "id" => "Ид",
         "title" => "Наименование",
     ],
-
+    // Specifications
+    "importXmlSpecifications" => "Классификатор->Свойства->Свойство",
+    "importXmlSpecification" => [
+        "id" => "Ид",
+        "title" => "Наименование",
+    ],
+    "importXmlSpecificationValues" => "ВариантыЗначений->Справочник",
+    "importXmlSpecificationValue" => [
+        "id" => "ИдЗначения",
+        "value" => "Значение",
+    ],
+    // Products
     "importXmlProducts" => "Каталог->Товары->Товар",
 
     // Models
