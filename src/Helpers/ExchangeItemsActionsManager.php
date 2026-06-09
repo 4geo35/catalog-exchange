@@ -11,8 +11,10 @@ use GIS\CatalogExchange\Traits\ExchangeSpecificationTrait;
 use GIS\CatalogExchange\Traits\ProgressBarTrait;
 use GIS\CategoryProduct\Interfaces\CategoryInterface;
 use GIS\CategoryProduct\Interfaces\ProductInterface;
+use GIS\CategoryProduct\Interfaces\SpecificationInterface;
 use GIS\CategoryProduct\Models\Category;
 use GIS\CategoryProduct\Models\Product;
+use GIS\CategoryProduct\Models\Specification;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
@@ -68,6 +70,14 @@ class ExchangeItemsActionsManager
             ->first();
     }
 
+    public function findSpecificationByUuid(string $uuid): ?SpecificationInterface
+    {
+        $modelClass = config("category-product.customSpecificationModel") ?? Specification::class;
+        return $modelClass::query()
+            ->where("exchange_uuid", $uuid)
+            ->first();
+    }
+
     public function findProductByUuid(string $uuid): ?ProductInterface
     {
         $modelClass = config("category-product.customProductModel") ?? Product::class;
@@ -93,7 +103,12 @@ class ExchangeItemsActionsManager
             $this->processCategoryParents($this->categories);
             $this->closeProgressBar();
         }
-        if ($this->products) {
+        if (count($this->specifications)) {
+            $this->setProgressBar("specifications", count($this->specifications));
+            $this->processSpecifications($this->specifications);
+            $this->closeProgressBar();
+        }
+        if ($this->products && false) { // TODO: remove false
             $this->setProgressBar("products", $this->products->count());
             $this->processProducts($this->products);
             $this->closeProgressBar();

@@ -6,6 +6,7 @@ return [
     "applyOrder" => true,
     "autoPublish" => true,
     "clearSlug" => true,
+    "defaultSpecificationType" => "checkbox",
 
     // Import XML TODO: change to env
     // Categories
