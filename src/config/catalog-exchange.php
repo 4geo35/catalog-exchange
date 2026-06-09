@@ -64,6 +64,7 @@ return [
     // Components
     "customAdminCmlIndexComponent" => null,
     "customAdminCmlFileListComponent" => null,
+    "customAdminCmlFileItemComponent" => null,
 
     // Listeners
     "customFireProcessExchangeFileListener" => null,

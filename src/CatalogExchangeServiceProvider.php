@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use GIS\CatalogExchange\Livewire\Admin\Cmls\IndexWire as AdminCmlIndexWire;
 use GIS\CatalogExchange\Livewire\Admin\CmlFiles\ListWire as AdminCmlFilesListWire;
+use GIS\CatalogExchange\Livewire\Admin\CmlFiles\ItemWire as AdminCmlFilesItemWire;
 use Livewire\Livewire;
 
 class CatalogExchangeServiceProvider extends ServiceProvider
@@ -96,6 +97,12 @@ class CatalogExchangeServiceProvider extends ServiceProvider
         Livewire::component(
             "cexc-admin-cml-file-list",
             $component ?? AdminCmlFilesListWire::class
+        );
+
+        $component = config("catalog-exchange.customAdminCmlFileItemComponent");
+        Livewire::component(
+            "cexc-admin-cml-file-item",
+            $component ?? AdminCmlFilesItemWire::class
         );
     }
 

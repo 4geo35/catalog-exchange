@@ -15,6 +15,8 @@ trait ExchangeSpecificationTrait
     {
         $index = 0;
         foreach ($specifications as $specification) {
+            if ($this->isNeedToStop()) { return; }
+
             $this->processSpecification($specification, $index);
             $this->increasePending();
             $index++;
@@ -42,6 +44,7 @@ trait ExchangeSpecificationTrait
             $specification->title = $specificationObject->title;
         }
         $specification->exchange_uuid = $specificationObject->id;
+        $specification->cml_id = $this->cmlFile->cml_id;
         if (config("catalog-exchange.applyOrder")) { $specification->priority = $index; }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $specification->slug = null; }
         $specification->save();

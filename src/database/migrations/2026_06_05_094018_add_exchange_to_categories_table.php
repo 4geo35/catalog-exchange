@@ -16,6 +16,10 @@ return new class extends Migration
                 ->nullable()
                 ->after("id");
 
+            $table->uuid("cml_id")
+                ->nullable()
+                ->after("exchange_uuid");
+
             $table->uuid("exchange_parent_uuid")
                 ->nullable()
                 ->after("exchange_uuid");
@@ -29,6 +33,7 @@ return new class extends Migration
     {
         Schema::table('categories', function (Blueprint $table) {
             $table->dropColumn("exchange_uuid");
+            $table->dropColumn("cml_id");
             $table->dropColumn("exchange_parent_uuid");
         });
     }

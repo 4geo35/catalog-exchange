@@ -12,6 +12,8 @@ trait ExchangeCategoryTrait
     {
         $index = 0;
         foreach ($categories as $category) {
+            if ($this->isNeedToStop()) { return; }
+
             $this->processCategory($this->prepareCategory($category, $index, $parent));
             $this->increasePending();
             $index++;
@@ -55,6 +57,7 @@ trait ExchangeCategoryTrait
             $category->title = $categoryObject->title;
         }
         $category->exchange_uuid = $categoryObject->id;
+        $category->cml_id = $this->cmlFile->cml_id;
         $category->exchange_parent_uuid = $categoryObject->parent;
         if (config("catalog-exchange.applyOrder")) { $category->priority = $categoryObject->priority; }
         if (config("catalog-exchange.autoPublish")) { $category->published_at = now(); }
@@ -65,6 +68,8 @@ trait ExchangeCategoryTrait
     protected function processCategoryParents(SimpleXMLElement $categories): void
     {
         foreach ($categories as $category) {
+            if ($this->isNeedToStop()) { return; }
+
             $this->processParent($this->getCategoryId($category));
             $this->increasePending();
 

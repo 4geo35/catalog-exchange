@@ -15,6 +15,10 @@ return new class extends Migration
             $table->uuid("exchange_uuid")
                 ->nullable()
                 ->after("id");
+
+            $table->uuid("cml_id")
+                ->nullable()
+                ->after("exchange_uuid");
         });
     }
 
@@ -25,6 +29,7 @@ return new class extends Migration
     {
         Schema::table('specifications', function (Blueprint $table) {
             $table->dropColumn("exchange_uuid");
+            $table->dropColumn("cml_id");
         });
     }
 };

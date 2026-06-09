@@ -11,6 +11,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -89,6 +90,7 @@ class ListWire extends Component
         $this->displayDelete = false;
     }
 
+    #[On("cexc-show-delete")]
     public function showDelete(string $modelId): void
     {
         $this->resetFields();
@@ -123,6 +125,7 @@ class ListWire extends Component
         $this->displayRun = false;
     }
 
+    #[On("cexc-show-run")]
     public function showRun(string $modelId): void
     {
         $this->resetFields();
@@ -153,6 +156,7 @@ class ListWire extends Component
         $this->displayStop = false;
     }
 
+    #[On("cexc-show-stop")]
     public function showStop(string $modelId): void
     {
         $this->resetFields();

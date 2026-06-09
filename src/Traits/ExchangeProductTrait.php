@@ -14,6 +14,7 @@ trait ExchangeProductTrait
     {
         $productIds = [];
         foreach ($products as $product) {
+            if ($this->isNeedToStop()) { return; }
             $product = $this->processProduct($this->prepareProduct($product));
             if (! empty($product) && $this->onlyChanges) { $productIds[] = $product->id; }
             $this->increasePending();
@@ -92,6 +93,7 @@ trait ExchangeProductTrait
         $product->short = $productObject->short;
 
         $product->exchange_uuid = $productObject->id;
+        $product->cml_id = $this->cmlFile->cml_id;
         if (config("catalog-exchange.autoPublish")) { $product->published_at = now(); }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $product->slug = null; }
 

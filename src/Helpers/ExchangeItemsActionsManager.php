@@ -40,8 +40,8 @@ class ExchangeItemsActionsManager
         $this->cmlFile = $cmlFile;
         $this->initDocument();
         if (! $this->type) {
-            ExchangeParserActions::completeParseFile($cmlFile);
-            Log::error("Undefined file type, stop parsing file {$cmlFile->id}");
+            ExchangeParserActions::completeParseFile($this->cmlFile);
+            Log::error("Undefined file type, stop parsing file {$this->cmlFile->id}");
             return;
         }
 
@@ -50,14 +50,17 @@ class ExchangeItemsActionsManager
         switch ($this->type) {
             case "import":
                 $this->processImport();
+                ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
 
             case "offers":
                 // TODO: process offers
+                ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
 
             case "yml":
                 // TODO: process yml
+                ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
         }
     }
@@ -89,12 +92,13 @@ class ExchangeItemsActionsManager
     protected function isNeedToStop(): bool
     {
         $this->cmlFile->refresh();
+        sleep(2);
         return $this->cmlFile->can_run;
     }
 
     protected function processImport(): void
     {
-        if ($this->categories && false) { // TODO: remove false
+        if ($this->categories) {
             $this->setProgressBar("categories", $this->categories->count());
             $this->processCategories($this->categories);
             $this->closeProgressBar();
@@ -103,12 +107,14 @@ class ExchangeItemsActionsManager
             $this->processCategoryParents($this->categories);
             $this->closeProgressBar();
         }
-        if (count($this->specifications) && false) { // TODO: remove false
+
+        if (count($this->specifications)) {
             $this->setProgressBar("specifications", count($this->specifications));
             $this->processSpecifications($this->specifications);
             $this->closeProgressBar();
         }
-        if ($this->products) { // TODO: remove false
+
+        if ($this->products) {
             $this->setProgressBar("products", $this->products->count());
             $this->processProducts($this->products);
             $this->closeProgressBar();
