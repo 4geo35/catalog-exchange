@@ -103,12 +103,12 @@ class ExchangeItemsActionsManager
             $this->processCategoryParents($this->categories);
             $this->closeProgressBar();
         }
-        if (count($this->specifications)) {
+        if (count($this->specifications) && false) { // TODO: remove false
             $this->setProgressBar("specifications", count($this->specifications));
             $this->processSpecifications($this->specifications);
             $this->closeProgressBar();
         }
-        if ($this->products && false) { // TODO: remove false
+        if ($this->products) { // TODO: remove false
             $this->setProgressBar("products", $this->products->count());
             $this->processProducts($this->products);
             $this->closeProgressBar();
