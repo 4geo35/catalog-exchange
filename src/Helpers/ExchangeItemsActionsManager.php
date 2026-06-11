@@ -118,6 +118,9 @@ class ExchangeItemsActionsManager
             $this->processProducts($this->products);
             $this->closeProgressBar();
         }
+
+        $this->clearProducts();
+        $this->clearCategories();
     }
 
     protected function initDocument(): void

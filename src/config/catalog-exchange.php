@@ -7,6 +7,7 @@ return [
     "autoPublish" => true,
     "clearSlug" => true,
     "defaultSpecificationType" => "checkbox",
+    "deleteOldItemsOnFullExchange" => false, // Если true удалит все чего не нашлось в файле, иначе снимет с публикации
 
     // Import XML TODO: change to env
     // Categories

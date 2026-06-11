@@ -36,9 +36,14 @@ class CmlFileProgressBar extends Model implements CmlFileProgressBarInterface
     {
         return match ($this->type) {
             "specifications" => "Характеристики",
+
             "products" => "Товары",
+            "clearProducts" => "Очистка товаров",
+
             "categoryParents" => "Дерево категорий",
             "categories" => "Категории",
+            "clearCategories" => "Очистка категорий",
+
             default => $this->type,
         };
     }

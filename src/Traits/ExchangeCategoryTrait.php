@@ -8,6 +8,34 @@ use SimpleXMLElement;
 
 trait ExchangeCategoryTrait
 {
+    protected function clearCategories(): void
+    {
+        if ($this->onlyChanges) { return; }
+        $modelClass = config("category-product.customCategoryModel") ?? Category::class;
+        $cmlId = $this->cmlFile->cml_id;
+        $categories = $modelClass::query()
+            ->where(function ($query) use ($cmlId) {
+                $query
+                    ->where("cml_id", "!=", $cmlId)
+                    ->orWhereNull("cml_id");
+            })
+            ->get();
+        if (! $categories->count()) { return; }
+
+        $this->setProgressBar("clearCategories", $categories->count());
+        foreach ($categories as $category) {
+            if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+                $category->delete();
+            } else {
+                $category->update([
+                    "published_at" => null,
+                ]);
+            }
+            $this->increasePending();
+        }
+        $this->closeProgressBar();
+    }
+
     protected function processCategories(SimpleXMLElement $categories, string $parent = null): void
     {
         $index = 0;

@@ -5,11 +5,40 @@ namespace GIS\CatalogExchange\Traits;
 use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CategoryProduct\Interfaces\ProductInterface;
 use GIS\CategoryProduct\Interfaces\SpecificationInterface;
+use GIS\CategoryProduct\Models\Product;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
 trait ExchangeProductTrait
 {
+    protected function clearProducts(): void
+    {
+        if ($this->onlyChanges) { return; }
+        $modelClass = config("category-product.customProductModel") ?? Product::class;
+        $cmlId = $this->cmlFile->cml_id;
+        $products = $modelClass::query()
+            ->where(function ($query) use ($cmlId) {
+                $query
+                    ->where("cml_id", "!=", $cmlId)
+                    ->orWhereNull("cml_id");
+            })
+            ->get();
+        if (! $products->count()) { return; }
+
+        $this->setProgressBar("clearProducts", $products->count());
+        foreach ($products as $product) {
+            if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+                $product->delete();
+            } else {
+                $product->update([
+                    "published_at" => null,
+                ]);
+            }
+            $this->increasePending();
+        }
+        $this->closeProgressBar();
+    }
+
     protected function processProducts(SimpleXMLElement $products): void
     {
         $productIds = [];
