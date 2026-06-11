@@ -32,4 +32,9 @@ class ItemWire extends Component
     {
         $this->dispatch("cexc-show-delete", modelId: $modelId);
     }
+
+    public function showClearHistory(string $modelId): void
+    {
+        $this->dispatch("cexc-show-clear-history", modelId: $modelId);
+    }
 }

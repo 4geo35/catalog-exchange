@@ -12,3 +12,9 @@
     <x-slot name="title">Остановить обработку файла</x-slot>
     <x-slot name="text">Остановится процесс создания\обновления каталога!</x-slot>
 </x-tt::modal.confirm>
+
+
+<x-tt::modal.confirm wire:model="displayClearHistory" closeAction="closeClearHistory" confirmAction="confirmClearHistory">
+    <x-slot name="title">Очистить историю обработки файла</x-slot>
+    <x-slot name="text">Будет очищена история обработки файла!</x-slot>
+</x-tt::modal.confirm>

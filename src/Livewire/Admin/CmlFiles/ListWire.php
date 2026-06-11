@@ -28,6 +28,7 @@ class ListWire extends Component
     public bool $displayDelete = false;
     public bool $displayRun = false;
     public bool $displayStop = false;
+    public bool $displayClearHistory = false;
     public string|null $fileId = null;
 
     public TemporaryUploadedFile|null $cmlFile = null;
@@ -179,6 +180,38 @@ class ListWire extends Component
 
         session()->flash("cml-files-success", "Послан сигнал остановки обработки файла");
         $this->closeStop();
+    }
+
+    public function closeClearHistory(): void
+    {
+        $this->resetFields();
+        $this->displayClearHistory = false;
+    }
+
+    #[On("cexc-show-clear-history")]
+    public function showClearHistory(string $modelId): void
+    {
+        $this->resetFields();
+        $this->fileId = $modelId;
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+        $this->displayClearHistory = true;
+    }
+
+    public function confirmClearHistory(): void
+    {
+        $model = $this->findModel();
+        if (! $model) { return; }
+        if (! $this->checkAuth()) { return; }
+
+        $progressBars = $model->progressBars()->whereNotNull("completed_at")->get();
+        foreach ($progressBars as $progressBar) {
+            $progressBar->delete();
+        }
+
+        session()->flash("cml-files-success", "История обработки успешно очищена");
+        $this->closeClearHistory();
     }
 
     protected function findModel(): ?CmlFileInterface

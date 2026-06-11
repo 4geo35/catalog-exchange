@@ -92,7 +92,6 @@ class ExchangeItemsActionsManager
     protected function isNeedToStop(): bool
     {
         $this->cmlFile->refresh();
-        sleep(2);
         return $this->cmlFile->can_run;
     }
 

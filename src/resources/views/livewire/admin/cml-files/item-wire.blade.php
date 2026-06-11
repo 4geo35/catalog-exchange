@@ -15,6 +15,11 @@
                     <dt class="col w-3/12 font-semibold">Тип файла</dt>
                     <dt class="col w-9/12 mb-indent-xs">{{ $item->type }}</dt>
                 </dl>
+                <button type="button" class="btn btn-sm btn-outline-warning mt-indent"
+                        wire:click="showClearHistory('{{ $item->id }}')"
+                        wire:loading.attr="disabled">
+                    Очистить историю обработки
+                </button>
             </div>
 
             <div class="col w-1/2">
