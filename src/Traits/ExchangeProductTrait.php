@@ -7,6 +7,7 @@ use GIS\CategoryProduct\Interfaces\ProductInterface;
 use GIS\CategoryProduct\Interfaces\SpecificationInterface;
 use GIS\CategoryProduct\Models\Product;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use SimpleXMLElement;
 
 trait ExchangeProductTrait
@@ -49,7 +50,6 @@ trait ExchangeProductTrait
             $this->increasePending();
         }
         // TODO: update cache
-        debugbar()->info($productIds);
     }
 
     protected function prepareProduct(SimpleXMLElement $product): object
@@ -62,6 +62,7 @@ trait ExchangeProductTrait
             );
         }
         $array["specifications"] = $this->parseProps($product);
+        $array["variation"] = $this->prepareProductVariationData($product);
         return (object) $array;
     }
 
@@ -94,6 +95,18 @@ trait ExchangeProductTrait
         return $result;
     }
 
+    protected function prepareProductVariationData(SimpleXMLElement $product): array
+    {
+        $array = [];
+        foreach (config("catalog-exchange.importXmlProductVariationData") as $key => $value) {
+            $array[$key] = $this->getValueByMap(
+                $product,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.importXmlProductVariationData.{$key}")
+            );
+        }
+        return $array;
+    }
+
     protected function processProduct(object $productObject): ?ProductInterface
     {
         if (
@@ -110,19 +123,23 @@ trait ExchangeProductTrait
 
         $product = $this->findProductByUuid($productObject->id);
         $titleChanged = false;
+        $title = Str::limit($productObject->title, 250);
         if (empty($product)) {
             $product = $category->products()->create([
-                'title' => $productObject->title,
+                'title' => $title,
             ]);
         } else {
-            $titleChanged = $product->title !== $productObject->title;
-            $product->title = $productObject->title;
+            $titleChanged = $product->title !== $title;
+            $product->title = $title;
         }
         $product->description = $productObject->description;
-        $product->short = $productObject->short;
+        $product->short = empty($productObject->short) ? null : Str::limit($productObject->short, 250);
 
         $product->exchange_uuid = $productObject->id;
         $product->cml_id = $this->cmlFile->cml_id;
+        $product->exchange_category = $productObject->categoryId;
+        $product->exchange_variation = $productObject->variation;
+
         if (config("catalog-exchange.autoPublish")) { $product->published_at = now(); }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $product->slug = null; }
 

@@ -4,6 +4,7 @@ namespace GIS\CatalogExchange\Traits;
 
 use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CategoryProduct\Models\Category;
+use Illuminate\Support\Str;
 use SimpleXMLElement;
 
 trait ExchangeCategoryTrait
@@ -24,7 +25,7 @@ trait ExchangeCategoryTrait
 
         $this->setProgressBar("clearCategories", $categories->count());
         foreach ($categories as $category) {
-            if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+            if (config("catalog-exchange.deleteOldItemsOnFullExchange") && false) { // TODO: нужно ли удалять, это не безопасно
                 $category->delete();
             } else {
                 $category->update([
@@ -75,14 +76,15 @@ trait ExchangeCategoryTrait
         if (empty($categoryObject->id) || empty($categoryObject->title)) { return; }
         $category = $this->findCategoryByUuid($categoryObject->id);
         $titleChanged = false;
+        $title = Str::limit($categoryObject->title, 250);
         if (empty($category)) {
             $modelClass = config("category-product.customCategoryModel") ?? Category::class;
             $category = $modelClass::query()->create([
-                "title" => $categoryObject->title,
+                "title" => $title,
             ]);
         } else {
-            $titleChanged = $category->title !== $categoryObject->title;
-            $category->title = $categoryObject->title;
+            $titleChanged = $category->title !== $title;
+            $category->title = $title;
         }
         $category->exchange_uuid = $categoryObject->id;
         $category->cml_id = $this->cmlFile->cml_id;

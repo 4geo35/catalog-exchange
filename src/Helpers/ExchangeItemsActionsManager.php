@@ -8,6 +8,7 @@ use GIS\CatalogExchange\Interfaces\CmlFileProgressBarInterface;
 use GIS\CatalogExchange\Traits\ExchangeCategoryTrait;
 use GIS\CatalogExchange\Traits\ExchangeProductTrait;
 use GIS\CatalogExchange\Traits\ExchangeSpecificationTrait;
+use GIS\CatalogExchange\Traits\ExchangeVariationTrait;
 use GIS\CatalogExchange\Traits\ProgressBarTrait;
 use GIS\CategoryProduct\Interfaces\CategoryInterface;
 use GIS\CategoryProduct\Interfaces\ProductInterface;
@@ -15,12 +16,15 @@ use GIS\CategoryProduct\Interfaces\SpecificationInterface;
 use GIS\CategoryProduct\Models\Category;
 use GIS\CategoryProduct\Models\Product;
 use GIS\CategoryProduct\Models\Specification;
+use GIS\ProductVariation\Interfaces\ProductVariationInterface;
+use GIS\ProductVariation\Models\ProductVariation;
 use Illuminate\Support\Facades\Log;
 use SimpleXMLElement;
 
 class ExchangeItemsActionsManager
 {
-    use ProgressBarTrait, ExchangeCategoryTrait, ExchangeSpecificationTrait, ExchangeProductTrait;
+    use ProgressBarTrait;
+    use ExchangeCategoryTrait, ExchangeSpecificationTrait, ExchangeProductTrait, ExchangeVariationTrait;
 
     public CmlFileInterface $cmlFile;
 
@@ -29,6 +33,7 @@ class ExchangeItemsActionsManager
     public SimpleXMLElement|null $document = null;
     public SimpleXMLElement|null $categories = null;
     public SimpleXMLElement|null $products = null;
+    public SimpleXMLElement|null $variations = null;
 
     public array $specifications = [];
 
@@ -54,8 +59,8 @@ class ExchangeItemsActionsManager
                 break;
 
             case "offers":
-                // TODO: process offers
-                ExchangeParserActions::completeParseFile($this->cmlFile);
+                $this->processOffers();
+//                ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
 
             case "yml":
@@ -84,6 +89,14 @@ class ExchangeItemsActionsManager
     public function findProductByUuid(string $uuid): ?ProductInterface
     {
         $modelClass = config("category-product.customProductModel") ?? Product::class;
+        return $modelClass::query()
+            ->where("exchange_uuid", $uuid)
+            ->first();
+    }
+
+    public function findVariationByUuid(string $uuid): ?ProductVariationInterface
+    {
+        $modelClass = config("product-variation.customVariationModel") ?? ProductVariation::class;
         return $modelClass::query()
             ->where("exchange_uuid", $uuid)
             ->first();
@@ -123,6 +136,16 @@ class ExchangeItemsActionsManager
         $this->clearCategories();
     }
 
+    protected function processOffers(): void
+    {
+        if ($this->variations) {
+            // TODO: make units
+            $this->setProgressBar("variations", $this->variations->count());
+            $this->processVariations($this->variations);
+            $this->closeProgressBar();
+        }
+    }
+
     protected function initDocument(): void
     {
         $this->readXmlFile($this->cmlFile);
@@ -135,7 +158,7 @@ class ExchangeItemsActionsManager
                 break;
 
             case "offers":
-                // TODO: get offers
+                $this->initOffers();
                 break;
 
             case "yml":
@@ -160,6 +183,20 @@ class ExchangeItemsActionsManager
 
         $this->prepareSpecifications();
 
+        $this->setOnlyChanges();
+    }
+
+    protected function initOffers(): void
+    {
+        $variationsMap = ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariations");
+        if ($variationsMap) { $this->variations = $this->getElementByMap($this->document, $variationsMap); }
+        else { $this->variations = null; }
+
+        $this->setOnlyChanges();
+    }
+
+    protected function setOnlyChanges(): void
+    {
         if (! empty($this->document->{"Каталог"}->attributes()->{"СодержитТолькоИзменения"})) {
             $value = $this->document->{"Каталог"}->attributes()->{"СодержитТолькоИзменения"}->__toString();
             $this->onlyChanges = $value === "true";

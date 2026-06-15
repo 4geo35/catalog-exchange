@@ -1,0 +1,130 @@
+<?php
+
+namespace GIS\CatalogExchange\Traits;
+
+use GIS\CatalogExchange\Facades\ExchangeParserActions;
+use GIS\CategoryProduct\Interfaces\ProductInterface;
+use GIS\ProductVariation\Interfaces\ProductVariationInterface;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use SimpleXMLElement;
+
+trait ExchangeVariationTrait
+{
+    protected function processVariations(SimpleXMLElement $variations): void
+    {
+        foreach ($variations as $variation) {
+            if ($this->isNeedToStop()) { return; }
+            $this->processVariation($this->prepareVariation($variation));
+            $this->increasePending();
+        }
+    }
+
+    protected function prepareVariation(SimpleXMLElement $variation): object
+    {
+        $array = [];
+        foreach (config("catalog-exchange.offersXmlVariation") as $key => $value) {
+            $array[$key] = $this->getValueByMap(
+                $variation,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariation.{$key}")
+            );
+        }
+        $array["price"] = $this->parsePrice($variation);
+        return (object) $array;
+    }
+
+    protected function parsePrice(SimpleXMLElement $variation): ?float
+    {
+        $prices = $this->getElementByMap(
+            $variation,
+            ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariationPrices")
+        );
+        if (empty($prices)) { return null; }
+        $result = null;
+        foreach ($prices as $price) {
+            $type = $this->getValueByMap(
+                $price,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariationPrice.type")
+            );
+            if (empty($type)) { continue; }
+
+            $value = $this->getValueByMap(
+                $price,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariationPrice.value")
+            );
+            if (empty($value)) { continue; }
+            $result = (float) $value;
+            break;
+        }
+        return $result;
+    }
+
+    protected function processVariation(object $variationObject): ?ProductVariationInterface
+    {
+        if (
+            empty($variationObject->id) ||
+            empty($variationObject->productId) ||
+            ! is_numeric($variationObject->price)
+        ) { return null; }
+
+        $product = $this->findProductByUuid($variationObject->productId);
+        if (empty($product)) {
+            Log::error("Could not find product with uuid {$variationObject->productId}");
+            return null;
+        }
+
+        $variationData = $this->getExchangeVariationData($product);
+        $sku = $this->getVariationSku($variationData, $variationObject);
+        $oldPrice = $this->getVariationOldPrice($variationData, $variationObject);
+        $currentPrice = $variationObject->price;
+        // Если старая цена меньше или равна текущей цене, значит цена битая
+        if ($oldPrice && ($oldPrice <= $currentPrice)) { $oldPrice = null; }
+
+        $title = ! empty($variationObject->title) ?
+            Str::limit($variationObject->title, 250) :
+            $product->title;
+
+        $variation = $this->findVariationByUuid($variationObject->id);
+        $dbData = [
+            "title" => $title,
+            // Если не приходит артикул, то желательно не стирать его каждый раз
+            "sku" => $variation ? ($sku ?? $variation->sku) : $sku,
+            "price" => $currentPrice,
+            "old_price" => $oldPrice,
+            "sale" => $oldPrice ? now() : null,
+        ];
+        if (empty($variation)) {
+            $variation = $product->variations()->create($dbData);
+        } else {
+            $variation->update($dbData);
+        }
+
+        $variation->exchange_uuid = $variationObject->id;
+        $variation->cml_id = $this->cmlFile->cml_id;
+        $variation->exchange_product = $variationObject->productId;
+
+        $variation->save();
+
+        return $variation;
+    }
+
+    protected function getVariationOldPrice(array $variationData, object $variationObject): ?float
+    {
+        return ! empty($variationObject->oldPrice) ? $variationObject->oldPrice : null;
+    }
+
+    protected function getVariationSku(array $variationData, object $variationObject): ?string
+    {
+        return ! empty($variationData["sku"]) ? $variationData["sku"] : null;
+    }
+
+    protected function getExchangeVariationData(ProductInterface $product): array
+    {
+        $json = $product->exchange_variation;
+        if (is_array($json)) { return $json; } // Это если указать casts в товаре
+        if (empty($json)) { return []; }
+        $array = json_decode($json, true);
+        if (empty($array)) { return []; }
+        return $array;
+    }
+}

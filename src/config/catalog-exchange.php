@@ -34,14 +34,30 @@ return [
         "id" => "Ид",
         "title" => "Наименование",
         "categoryId" => "Группы->Ид",
-        "sku" => "Артикул",
         "description" => "Описание",
         "short" => "КраткоеОписание",
+    ],
+    "importXmlProductVariationData" => [
+        "sku" => "Артикул",
     ],
     "importXmlProductSpecifications" => "ЗначенияСвойств->ЗначенияСвойства",
     "importXmlProductSpecification" => [
         "id" => "Ид",
         "value" => "Значение",
+    ],
+
+    // Offers XML
+    "offersXmlVariations" => "ПакетПредложений->Предложения->Предложение",
+    "offersXmlVariation" => [ // Только текстовые значения, автоматически обходит этот массив
+        "id" => "Ид",
+        "title" => "Наименование",
+        "productId" => "Ид",
+    ],
+    "offersXmlVariationPrices" => "Цены->Цена",
+    "offersXmlVariationPrice" => [
+        "type" => "ИдТипаЦены",
+        "value" => "ЦенаЗаЕдиницу",
+        "measurement" => "Единица",
     ],
 
     // Models

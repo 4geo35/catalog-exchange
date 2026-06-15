@@ -19,6 +19,14 @@ return new class extends Migration
             $table->uuid("cml_id")
                 ->nullable()
                 ->after("exchange_uuid");
+
+            $table->uuid("exchange_category")
+                ->nullable()
+                ->after("cml_id");
+
+            $table->json("exchange_variation")
+                ->nullable()
+                ->after("exchange_category");
         });
     }
 
@@ -30,6 +38,8 @@ return new class extends Migration
         Schema::table('products', function (Blueprint $table) {
             $table->dropColumn("exchange_uuid");
             $table->dropColumn("cml_id");
+            $table->dropColumn("exchange_category");
+            $table->dropColumn("exchange_variation");
         });
     }
 };
