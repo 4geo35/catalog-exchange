@@ -73,10 +73,14 @@ trait ExchangeCategoryTrait
 
     protected function processCategory(object $categoryObject): void
     {
-        if (empty($categoryObject->id) || empty($categoryObject->title)) { return; }
+        if (
+            empty($categoryObject->id) ||
+            empty($categoryObject->title)
+        ) { return; }
+
         $category = $this->findCategoryByUuid($categoryObject->id);
         $titleChanged = false;
-        $title = Str::limit($categoryObject->title, 250);
+        $title = $this->prepareCategoryTitle($categoryObject->title);
         if (empty($category)) {
             $modelClass = config("category-product.customCategoryModel") ?? Category::class;
             $category = $modelClass::query()->create([
@@ -89,10 +93,19 @@ trait ExchangeCategoryTrait
         $category->exchange_uuid = $categoryObject->id;
         $category->cml_id = $this->cmlFile->cml_id;
         $category->exchange_parent_uuid = $categoryObject->parent;
+
         if (config("catalog-exchange.applyOrder")) { $category->priority = $categoryObject->priority; }
         if (config("catalog-exchange.autoPublish")) { $category->published_at = now(); }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $category->slug = null; }
+
         $category->save();
+    }
+
+    protected function prepareCategoryTitle(string $title): string
+    {
+        $result = Str::trim($title);
+        $result = Str::deduplicate($result);
+        return Str::limit($result, 250);
     }
 
     protected function processCategoryParents(SimpleXMLElement $categories): void

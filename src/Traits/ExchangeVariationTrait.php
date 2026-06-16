@@ -80,9 +80,7 @@ trait ExchangeVariationTrait
         // Если старая цена меньше или равна текущей цене, значит цена битая
         if ($oldPrice && ($oldPrice <= $currentPrice)) { $oldPrice = null; }
 
-        $title = ! empty($variationObject->title) ?
-            Str::limit($variationObject->title, 250) :
-            $product->title;
+        $title = $this->prepareVariationTitle($variationObject->title);
 
         $variation = $this->findVariationByUuid($variationObject->id);
         $dbData = [
@@ -103,6 +101,8 @@ trait ExchangeVariationTrait
         $variation->cml_id = $this->cmlFile->cml_id;
         $variation->exchange_product = $variationObject->productId;
 
+        if (config("catalog-exchange.autoPublish")) { $variation->published_at = now(); }
+
         $variation->save();
 
         return $variation;
@@ -115,7 +115,7 @@ trait ExchangeVariationTrait
 
     protected function getVariationSku(array $variationData, object $variationObject): ?string
     {
-        return ! empty($variationData["sku"]) ? $variationData["sku"] : null;
+        return ! empty($variationData["sku"]) ? Str::trim($variationData["sku"]) : null;
     }
 
     protected function getExchangeVariationData(ProductInterface $product): array
@@ -126,5 +126,13 @@ trait ExchangeVariationTrait
         $array = json_decode($json, true);
         if (empty($array)) { return []; }
         return $array;
+    }
+
+    protected function prepareVariationTitle(string $title = null): ?string
+    {
+        if (empty($title)) { return null; }
+        $result = Str::trim($title);
+        $result = Str::deduplicate($result);
+        return Str::limit($result, 250);
     }
 }

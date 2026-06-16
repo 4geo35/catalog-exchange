@@ -6,6 +6,7 @@ use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CategoryProduct\Interfaces\SpecificationInterface;
 use GIS\CategoryProduct\Models\Specification;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Mockery\Exception;
 use SimpleXMLElement;
 
@@ -25,14 +26,19 @@ trait ExchangeSpecificationTrait
 
     protected function processSpecification(object $specificationObject, int $index): void
     {
-        if (empty($specificationObject->id) || empty($specificationObject->title)) { return; }
+        if (
+            empty($specificationObject->id) ||
+            empty($specificationObject->title)
+        ) { return; }
+
         $specification = $this->findSpecificationByUuid($specificationObject->id) ?? $this->checkUniqueSpecification($specificationObject);
         $titleChanged = false;
+        $title = $this->prepareSpecificationTitle($specificationObject->title);
         if (empty($specification)) {
             try {
                 $modelClass = config("category-product.customSpecificationModel") ?? Specification::class;
                 $specification = $modelClass::query()->create([
-                    "title" => $specificationObject->title,
+                    "title" => $title,
                     "type" => config("catalog-exchange.defaultSpecificationType"),
                 ]);
             } catch (Exception $exception) {
@@ -40,14 +46,24 @@ trait ExchangeSpecificationTrait
                 return;
             }
         } else {
-            $titleChanged = $specification->title !== $specificationObject->title;
-            $specification->title = $specificationObject->title;
+            $titleChanged = $specification->title !== $title;
+            $specification->title = $title;
         }
+
         $specification->exchange_uuid = $specificationObject->id;
         $specification->cml_id = $this->cmlFile->cml_id;
+
         if (config("catalog-exchange.applyOrder")) { $specification->priority = $index; }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $specification->slug = null; }
+
         $specification->save();
+    }
+
+    protected function prepareSpecificationTitle(string $title): string
+    {
+        $result = Str::trim($title);
+        $result = Str::deduplicate($result);
+        return Str::limit($result, 250);
     }
 
     protected function checkUniqueSpecification(object $specificationObject): ?SpecificationInterface

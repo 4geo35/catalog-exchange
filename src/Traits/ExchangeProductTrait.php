@@ -123,7 +123,7 @@ trait ExchangeProductTrait
 
         $product = $this->findProductByUuid($productObject->id);
         $titleChanged = false;
-        $title = Str::limit($productObject->title, 250);
+        $title = $this->prepareProductTitle($productObject->title);
         if (empty($product)) {
             $product = $category->products()->create([
                 'title' => $title,
@@ -132,8 +132,8 @@ trait ExchangeProductTrait
             $titleChanged = $product->title !== $title;
             $product->title = $title;
         }
-        $product->description = $productObject->description;
-        $product->short = empty($productObject->short) ? null : Str::limit($productObject->short, 250);
+        $product->description = $this->prepareProductDescription($productObject->description);
+        $product->short = $this->prepareProductShort($productObject->short);
 
         $product->exchange_uuid = $productObject->id;
         $product->cml_id = $this->cmlFile->cml_id;
@@ -152,6 +152,28 @@ trait ExchangeProductTrait
         $this->processProductSpecifications($product, $productObject->specifications);
 
         return $product;
+    }
+
+    protected function prepareProductTitle(string $title): string
+    {
+        $result = Str::trim($title);
+        $result = Str::deduplicate($result);
+        return Str::limit($result, 250);
+    }
+
+    protected function prepareProductShort(string $short = null): ?string
+    {
+        if (empty($short)) { return null; }
+        $result = Str::trim($short);
+        $result = Str::deduplicate($result);
+        return Str::limit($result, 250);
+    }
+
+    protected function prepareProductDescription(string $description = null): ?string
+    {
+        if (empty($description)) { return null; }
+        $result = Str::trim($description);
+        return Str::deduplicate($result, "  ");
     }
 
     protected function processProductSpecifications(ProductInterface $product, array $specifications): void
