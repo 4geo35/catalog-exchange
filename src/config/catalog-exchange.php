@@ -52,6 +52,7 @@ return [
         "id" => "Ид",
         "title" => "Наименование",
         "productId" => "Ид",
+        "unit" => "БазоваяЕдиница",
     ],
     "offersXmlVariationPrices" => "Цены->Цена",
     "offersXmlVariationPrice" => [

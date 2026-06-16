@@ -139,7 +139,6 @@ class ExchangeItemsActionsManager
     protected function processOffers(): void
     {
         if ($this->variations) {
-            // TODO: make units
             $this->setProgressBar("variations", $this->variations->count());
             $this->processVariations($this->variations);
             $this->closeProgressBar();

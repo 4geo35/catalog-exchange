@@ -5,6 +5,7 @@ namespace GIS\CatalogExchange\Traits;
 use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CategoryProduct\Interfaces\ProductInterface;
 use GIS\ProductVariation\Interfaces\ProductVariationInterface;
+use GIS\ProductVariation\Models\MeasurementUnit;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
@@ -74,12 +75,14 @@ trait ExchangeVariationTrait
         }
 
         $variationData = $this->getExchangeVariationData($product);
-        $sku = $this->getVariationSku($variationData, $variationObject);
+
         $oldPrice = $this->getVariationOldPrice($variationData, $variationObject);
         $currentPrice = $variationObject->price;
         // Если старая цена меньше или равна текущей цене, значит цена битая
         if ($oldPrice && ($oldPrice <= $currentPrice)) { $oldPrice = null; }
 
+        $sku = $this->getVariationSku($variationData, $variationObject);
+        $unitId = $this->getVariationUnit($variationData, $variationObject);
         $title = $this->prepareVariationTitle($variationObject->title);
 
         $variation = $this->findVariationByUuid($variationObject->id);
@@ -90,6 +93,7 @@ trait ExchangeVariationTrait
             "price" => $currentPrice,
             "old_price" => $oldPrice,
             "sale" => $oldPrice ? now() : null,
+            "unit_id" => $unitId,
         ];
         if (empty($variation)) {
             $variation = $product->variations()->create($dbData);
@@ -116,6 +120,27 @@ trait ExchangeVariationTrait
     protected function getVariationSku(array $variationData, object $variationObject): ?string
     {
         return ! empty($variationData["sku"]) ? Str::trim($variationData["sku"]) : null;
+    }
+
+    protected function getVariationUnit(array $variationData, object $variationObject): ?int
+    {
+        if (empty($variationObject->unit)) { return null; }
+
+        $unitTitle = $variationObject->unit;
+        $unitTitle = Str::trim($unitTitle);
+        $unitTitle = Str::deduplicate($unitTitle);
+        $unitTitle = Str::limit($unitTitle, 250);
+
+        $modelClass = config("product-variation.customUnitModel") ?? MeasurementUnit::class;
+        $unit = $modelClass::query()
+            ->where('title', $unitTitle)
+            ->first();
+        if (empty($unit)) {
+            $unit = $modelClass::query()->create([
+                "title" => $unitTitle,
+            ]);
+        }
+        return $unit->id;
     }
 
     protected function getExchangeVariationData(ProductInterface $product): array
