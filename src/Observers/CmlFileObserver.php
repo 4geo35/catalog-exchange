@@ -4,7 +4,6 @@ namespace GIS\CatalogExchange\Observers;
 
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Models\CmlFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class CmlFileObserver
@@ -17,5 +16,12 @@ class CmlFileObserver
             $uuid = Str::uuid();
         }
         $file->id = $uuid;
+    }
+
+    public function deleted(CmlFileInterface $file): void
+    {
+        foreach ($file->progressBars as $progressBar) {
+            $progressBar->delete();
+        }
     }
 }

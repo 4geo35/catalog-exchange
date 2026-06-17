@@ -60,11 +60,11 @@ class ExchangeItemsActionsManager
 
             case "offers":
                 $this->processOffers();
-//                ExchangeParserActions::completeParseFile($this->cmlFile);
+                ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
 
             case "yml":
-                // TODO: process yml
+                $this->processYml();
                 ExchangeParserActions::completeParseFile($this->cmlFile);
                 break;
         }
@@ -145,6 +145,19 @@ class ExchangeItemsActionsManager
         }
     }
 
+    protected function processYml(): void
+    {
+        if ($this->categories) {
+            $this->setProgressBar("categories", $this->categories->count());
+            $this->processYmlCategories($this->categories);
+            $this->closeProgressBar();
+
+            $this->setProgressBar("categoryParents", $this->categories->count());
+            $this->processYmlCategoryParents($this->categories);
+            $this->closeProgressBar();
+        }
+    }
+
     protected function initDocument(): void
     {
         $this->readXmlFile($this->cmlFile);
@@ -161,7 +174,7 @@ class ExchangeItemsActionsManager
                 break;
 
             case "yml":
-                // TODO: parse YML
+                $this->initYml();
                 break;
 
             default:
@@ -194,6 +207,20 @@ class ExchangeItemsActionsManager
         $this->setOnlyChanges();
     }
 
+    protected function initYml(): void
+    {
+        $categoriesMap = ExchangeParserActions::getExplodedConfig("catalog-exchange.ymlXmlCategories");
+        if ($categoriesMap) { $this->categories = $this->getElementByMap($this->document, $categoriesMap); }
+        else { $this->categories = null; }
+
+        $productsMap = ExchangeParserActions::getExplodedConfig("catalog-exchange.ymlXmlProducts");
+        if ($productsMap) { $this->products = $this->getElementByMap($this->document, $productsMap); }
+        else { $this->products = null; }
+
+        $this->variations = $this->products;
+        $this->onlyChanges = false;
+    }
+
     protected function setOnlyChanges(): void
     {
         if (! empty($this->document->{"Каталог"}->attributes()->{"СодержитТолькоИзменения"})) {
@@ -224,6 +251,26 @@ class ExchangeItemsActionsManager
             $value = $value->__toString();
         } catch (\Exception $exception) {
             Log::error("Fail to get value by map (" . implode("->", $map) . ") in {$this->cmlFile->id}: " . $exception->getMessage());
+            return null;
+        }
+        return $value;
+    }
+
+    protected function getAttributeValue(SimpleXMLElement $element, string $name): ?string
+    {
+        try {
+            $value = $element->attributes()->{$name};
+        } catch (\Exception $exception) {
+            return null;
+        }
+        return $value;
+    }
+
+    protected function getElementValue(SimpleXMLElement $element): ?string
+    {
+        try {
+            $value = $element->__toString();
+        } catch (\Exception $exception) {
             return null;
         }
         return $value;

@@ -61,6 +61,13 @@ return [
         "measurement" => "Единица",
     ],
 
+    // YML XML
+    "ymlXmlCategories" => "shop->categories->category",
+    "ymlXmlCategoryId" => "id",
+    "ymlXmlCategoryParentId" => "parentId",
+
+    "ymlXmlProducts" => "shop->offers->offer",
+
     // Models
     "customCmlModel" => null,
     "customCmlModelObserver" => null,

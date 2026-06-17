@@ -44,6 +44,8 @@ class CmlFileProgressBar extends Model implements CmlFileProgressBarInterface
             "categories" => "Категории",
             "clearCategories" => "Очистка категорий",
 
+            "variations" => "Цены",
+
             default => $this->type,
         };
     }

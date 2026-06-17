@@ -15,6 +15,8 @@ trait ExchangeProductTrait
     protected function clearProducts(): void
     {
         if ($this->onlyChanges) { return; }
+        if ($this->isNeedToStop()) { return; }
+
         $modelClass = config("category-product.customProductModel") ?? Product::class;
         $cmlId = $this->cmlFile->cml_id;
         $products = $modelClass::query()
@@ -27,8 +29,13 @@ trait ExchangeProductTrait
         if (! $products->count()) { return; }
 
         $this->setProgressBar("clearProducts", $products->count());
+
         foreach ($products as $product) {
+            if ($this->isNeedToStop()) { break; }
             if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+                foreach ($product->variations as $variation) {
+                    $variation->delete();
+                }
                 $product->delete();
             } else {
                 $product->update([
@@ -37,6 +44,7 @@ trait ExchangeProductTrait
             }
             $this->increasePending();
         }
+
         $this->closeProgressBar();
     }
 

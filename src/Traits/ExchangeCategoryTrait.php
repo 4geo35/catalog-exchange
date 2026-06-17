@@ -12,6 +12,8 @@ trait ExchangeCategoryTrait
     protected function clearCategories(): void
     {
         if ($this->onlyChanges) { return; }
+        if ($this->isNeedToStop()) { return; }
+
         $modelClass = config("category-product.customCategoryModel") ?? Category::class;
         $cmlId = $this->cmlFile->cml_id;
         $categories = $modelClass::query()
@@ -25,6 +27,7 @@ trait ExchangeCategoryTrait
 
         $this->setProgressBar("clearCategories", $categories->count());
         foreach ($categories as $category) {
+            if ($this->isNeedToStop()) { break; }
             if (config("catalog-exchange.deleteOldItemsOnFullExchange") && false) { // TODO: нужно ли удалять, это не безопасно
                 $category->delete();
             } else {
@@ -58,6 +61,17 @@ trait ExchangeCategoryTrait
         }
     }
 
+    protected function processYmlCategories(SimpleXMLElement $categories): void
+    {
+        $index = 0;
+        foreach ($categories as $category) {
+            if ($this->isNeedToStop()) { return; }
+            $this->processCategory($this->prepareYmlCategory($category, $index));
+            $this->increasePending();
+            $index++;
+        }
+    }
+
     protected function prepareCategory(SimpleXMLElement $category, int $index, string $parent = null): object
     {
         return (object) [
@@ -67,6 +81,16 @@ trait ExchangeCategoryTrait
                 ExchangeParserActions::getExplodedConfig("catalog-exchange.importXmlCategory.title")
             ),
             "parent" => $parent,
+            "priority" => $index,
+        ];
+    }
+
+    protected function prepareYmlCategory(SimpleXMLElement $category, int $index): object
+    {
+        return (object) [
+            "id" => $this->getYmlCategoryId($category),
+            "title" => $this->getElementValue($category),
+            "parent" => $this->getAttributeValue($category, config("catalog-exchange.ymlXmlCategoryParentId")),
             "priority" => $index,
         ];
     }
@@ -94,7 +118,10 @@ trait ExchangeCategoryTrait
         $category->cml_id = $this->cmlFile->cml_id;
         $category->exchange_parent_uuid = $categoryObject->parent;
 
-        if (config("catalog-exchange.applyOrder")) { $category->priority = $categoryObject->priority; }
+        if (
+            config("catalog-exchange.applyOrder") &&
+            isset($categoryObject->priority)
+        ) { $category->priority = $categoryObject->priority; }
         if (config("catalog-exchange.autoPublish")) { $category->published_at = now(); }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $category->slug = null; }
 
@@ -121,6 +148,16 @@ trait ExchangeCategoryTrait
 
             $this->increaseTotal($subCategories->count());
             $this->processCategoryParents($subCategories);
+        }
+    }
+
+    protected function processYmlCategoryParents(SimpleXMLElement $categories): void
+    {
+        foreach ($categories as $category) {
+            if ($this->isNeedToStop()) { return; }
+
+            $this->processParent($this->getYmlCategoryId($category));
+            $this->increasePending();
         }
     }
 
@@ -158,6 +195,11 @@ trait ExchangeCategoryTrait
             $category,
             ExchangeParserActions::getExplodedConfig("catalog-exchange.importXmlCategory.id")
         );
+    }
+
+    protected function getYmlCategoryId(SimpleXMLElement $category): ?string
+    {
+        return (string) $this->getAttributeValue($category, config("catalog-exchange.ymlXmlCategoryId"));
     }
 
     protected function getSubCategories(SimpleXMLElement $category): ?SimpleXMLElement
