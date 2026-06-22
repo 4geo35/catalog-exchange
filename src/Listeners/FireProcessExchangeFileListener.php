@@ -10,6 +10,8 @@ use Illuminate\Support\Facades\Log;
 
 class FireProcessExchangeFileListener implements ShouldQueue
 {
+    public $timeout = 0;
+
     public function __construct() {}
 
     /**

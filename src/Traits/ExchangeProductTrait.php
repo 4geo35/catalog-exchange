@@ -60,6 +60,15 @@ trait ExchangeProductTrait
         // TODO: update cache
     }
 
+    protected function processYmlProducts(SimpleXMLElement $products): void
+    {
+        foreach ($products as $product) {
+            if ($this->isNeedToStop()) { return; }
+            $this->processProduct($this->prepareYmlProduct($product));
+            $this->increasePending();
+        }
+    }
+
     protected function prepareProduct(SimpleXMLElement $product): object
     {
         $array = [];
@@ -71,6 +80,20 @@ trait ExchangeProductTrait
         }
         $array["specifications"] = $this->parseProps($product);
         $array["variation"] = $this->prepareProductVariationData($product);
+        return (object) $array;
+    }
+
+    protected function prepareYmlProduct(SimpleXMLElement $product): object
+    {
+        $array = [
+            "id" => $this->getAttributeValue($product, config("catalog-exchange.ymlXmlProductId")),
+        ];
+        foreach (config("catalog-exchange.ymlXmlProduct") as $key => $value) {
+            $array[$key] = $this->getValueByMap(
+                $product,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.ymlXmlProduct.{$key}")
+            );
+        }
         return (object) $array;
     }
 
@@ -146,7 +169,9 @@ trait ExchangeProductTrait
         $product->exchange_uuid = $productObject->id;
         $product->cml_id = $this->cmlFile->cml_id;
         $product->exchange_category = $productObject->categoryId;
-        $product->exchange_variation = $productObject->variation;
+        if (! empty($productObject->variation)) {
+            $product->exchange_variation = $productObject->variation;
+        } else { $product->exchange_variation = null; }
 
         if (config("catalog-exchange.autoPublish")) { $product->published_at = now(); }
         if ($titleChanged && config("catalog-exchange.clearSlug")) { $product->slug = null; }
@@ -157,9 +182,36 @@ trait ExchangeProductTrait
 
         $product->save();
 
-        $this->processProductSpecifications($product, $productObject->specifications);
+        $this->processProductImage($product, $productObject);
+
+        if (! empty($productObject->specifications)) {
+            $this->processProductSpecifications($product, $productObject->specifications);
+        }
 
         return $product;
+    }
+
+    protected function processProductImage(ProductInterface $product, object $productObject): void
+    {
+        if (empty($productObject->image)) { return; }
+
+        $uploadedFile = $this->getTmpImageByUrl($productObject->image);
+        if (empty($uploadedFile)) { return; }
+
+        $mime = $uploadedFile->getClientOriginalExtension();
+        $originalName = $uploadedFile->getClientOriginalName();
+        $originalName = str_replace(".{$mime}", "", $originalName);
+        $newFile = true;
+        foreach ($product->images as $image) {
+            if ($image->name !== $originalName) { continue; }
+            $newFile = false;
+            break;
+        }
+        if ($newFile) {
+            $product->storeGalleryImageDirectly($uploadedFile);
+        }
+
+        $this->clearTmlImageByName($uploadedFile->getFilename());
     }
 
     protected function prepareProductTitle(string $title): string

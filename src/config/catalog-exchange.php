@@ -8,6 +8,7 @@ return [
     "clearSlug" => true,
     "defaultSpecificationType" => "checkbox",
     "deleteOldItemsOnFullExchange" => false, // Если true удалит все чего не нашлось в файле, иначе снимет с публикации
+    "loadImages" => true,
 
     // Import XML TODO: change to env
     // Categories
@@ -62,11 +63,20 @@ return [
     ],
 
     // YML XML
+    // Categories
     "ymlXmlCategories" => "shop->categories->category",
     "ymlXmlCategoryId" => "id",
     "ymlXmlCategoryParentId" => "parentId",
-
+    // Products
     "ymlXmlProducts" => "shop->offers->offer",
+    "ymlXmlProductId" => "id",
+    "ymlXmlProduct" => [ // Только текстовые значения, автоматически обходит этот массив
+        "title" => "name",
+        "categoryId" => "categoryId",
+        "image" => "picture",
+        "description" => "description",
+        "short" => "shortDescription",
+    ],
 
     // Models
     "customCmlModel" => null,

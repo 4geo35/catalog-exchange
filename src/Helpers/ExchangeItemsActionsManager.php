@@ -18,7 +18,13 @@ use GIS\CategoryProduct\Models\Product;
 use GIS\CategoryProduct\Models\Specification;
 use GIS\ProductVariation\Interfaces\ProductVariationInterface;
 use GIS\ProductVariation\Models\ProductVariation;
+use Illuminate\Http\File;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use SimpleXMLElement;
 
 class ExchangeItemsActionsManager
@@ -147,13 +153,19 @@ class ExchangeItemsActionsManager
 
     protected function processYml(): void
     {
-        if ($this->categories) {
+        if ($this->categories && false) { // TODO: remove false
             $this->setProgressBar("categories", $this->categories->count());
             $this->processYmlCategories($this->categories);
             $this->closeProgressBar();
 
             $this->setProgressBar("categoryParents", $this->categories->count());
             $this->processYmlCategoryParents($this->categories);
+            $this->closeProgressBar();
+        }
+
+        if ($this->products) {
+            $this->setProgressBar("products", $this->products->count());
+            $this->processYmlProducts($this->products);
             $this->closeProgressBar();
         }
     }
@@ -282,6 +294,51 @@ class ExchangeItemsActionsManager
             $this->document = simplexml_load_file($cmlFile->full_path);
         } catch (\Exception $e) {
             Log::error("Fail load xml file on initDocument for file {$cmlFile->id}:" . $e->getMessage());
+        }
+    }
+
+    protected function getTmpImageByUrl(string $url): ?UploadedFile
+    {
+        try {
+            $response = Http::timeout(5)->get($url);
+        } catch (\Exception $exception) {
+            return null;
+        }
+
+        if (! $response->successful()) { return null; }
+
+        $contents = $response->body();
+        $fileName = basename(parse_url($url, PHP_URL_PATH));
+        $tmpFileName = "tmp_validation_" . uniqid() . "_" . $fileName;
+
+        try {
+            Storage::disk("local")->put($tmpFileName, $contents);
+
+            $mimeType = Storage::disk("local")->mimeType($tmpFileName);
+            $tmpFilePath = Storage::disk("local")->path($tmpFileName);
+
+            $fileInstance = new File($tmpFilePath);
+
+            $validator = Validator::make([
+                "image" => $fileInstance,
+            ], [
+                "image" => ["required", "image"]
+            ]);
+
+            if (!$validator->fails()) {
+                return new UploadedFile($tmpFilePath, $fileName, $mimeType);
+            }
+        } catch (\Exception $exception) {}
+
+        $this->clearTmlImageByName($tmpFileName);
+
+        return null;
+    }
+
+    protected function clearTmlImageByName(string $tmpFileName): void
+    {
+        if (Storage::disk("local")->exists($tmpFileName)) {
+            Storage::disk("local")->delete($tmpFileName);
         }
     }
 }
