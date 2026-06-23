@@ -6,17 +6,60 @@ use GIS\CatalogExchange\Facades\ExchangeParserActions;
 use GIS\CategoryProduct\Interfaces\ProductInterface;
 use GIS\ProductVariation\Interfaces\ProductVariationInterface;
 use GIS\ProductVariation\Models\MeasurementUnit;
+use GIS\ProductVariation\Models\ProductVariation;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
 
 trait ExchangeVariationTrait
 {
+    protected function clearVariations(): void
+    {
+        if ($this->onlyChanges) { return; }
+        if ($this->isNeedToStop()) { return; }
+
+        $modelClass = config("product-variation.customVariationModel") ?? ProductVariation::class;
+        $cmlId = $this->cmlFile->cml_id;
+        $variations = $modelClass::query()
+            ->where(function ($query) use ($cmlId) {
+                $query
+                    ->where("cml_id", "!=", $cmlId)
+                    ->orWhereNull("cml_id");
+            })
+            ->get();
+        if (! $variations->count()) { return; }
+
+        $this->setProgressBar("clearVariations", $variations->count());
+
+        foreach ($variations as $variation) {
+            if ($this->isNeedToStop()) { return; }
+            if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+                $variation->delete();
+            } else {
+                $variation->update([
+                    "published_at" => null
+                ]);
+            }
+            $this->increasePending();
+        }
+
+        $this->closeProgressBar();
+    }
+
     protected function processVariations(SimpleXMLElement $variations): void
     {
         foreach ($variations as $variation) {
             if ($this->isNeedToStop()) { return; }
             $this->processVariation($this->prepareVariation($variation));
+            $this->increasePending();
+        }
+    }
+
+    protected function processYmlVariations(SimpleXMLElement $variations): void
+    {
+        foreach ($variations as $variation) {
+            if ($this->isNeedToStop()) { return; }
+            $this->processVariation($this->prepareYmlVariation($variation));
             $this->increasePending();
         }
     }
@@ -31,6 +74,23 @@ trait ExchangeVariationTrait
             );
         }
         $array["price"] = $this->parsePrice($variation);
+        return (object) $array;
+    }
+
+    protected function prepareYmlVariation(SimpleXMLElement $variation): object
+    {
+        $id = $this->getAttributeValue($variation, config("catalog-exchange.ymlXmlVariationId"));
+        $array = [
+            "id" => $id,
+            "productId" => $id,
+            "available" => $this->getAttributeValue($variation, config("catalog-exchange.ymlXmlVariationAvailable")),
+        ];
+        foreach (config("catalog-exchange.ymlXmlVariation") as $key => $value) {
+            $array[$key] = $this->getValueByMap(
+                $variation,
+                ExchangeParserActions::getExplodedConfig("catalog-exchange.ymlXmlVariation.{$key}")
+            );
+        }
         return (object) $array;
     }
 
@@ -105,11 +165,30 @@ trait ExchangeVariationTrait
         $variation->cml_id = $this->cmlFile->cml_id;
         $variation->exchange_product = $variationObject->productId;
 
-        if (config("catalog-exchange.autoPublish")) { $variation->published_at = now(); }
+        $available = $this->getVariationAvailable($variationObject);
+        if (is_bool($available)) {
+            $variation->published_at = $available ? now() : null;
+        } elseif (config("catalog-exchange.autoPublish")) {
+            $variation->published_at = now();
+        }
 
         $variation->save();
 
         return $variation;
+    }
+
+    protected function getVariationAvailable(object $variationObject): ?bool
+    {
+        if (empty($variationObject->available) && empty($variationObject->store)) { return null; }
+        if (! empty($variationObject->available)) {
+            $value = $variationObject->available;
+        } elseif (! empty($variationObject->store)) {
+            $value = $variationObject->store;
+        } else {
+            $value = null;
+        }
+        if (empty($value)) { return null; }
+        return $value === "true";
     }
 
     protected function getVariationOldPrice(array $variationData, object $variationObject): ?float

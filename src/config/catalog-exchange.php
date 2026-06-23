@@ -8,7 +8,7 @@ return [
     "clearSlug" => true,
     "defaultSpecificationType" => "checkbox",
     "deleteOldItemsOnFullExchange" => false, // Если true удалит все чего не нашлось в файле, иначе снимет с публикации
-    "loadImages" => true,
+    "loadImages" => false,
 
     // Import XML TODO: change to env
     // Categories
@@ -76,6 +76,15 @@ return [
         "image" => "picture",
         "description" => "description",
         "short" => "shortDescription",
+    ],
+    // Variations
+    "ymlXmlVariationId" => "id",
+    "ymlXmlVariationAvailable" => "available",
+    "ymlXmlVariation" => [ // Только текстовые значения, автоматически обходит этот массив
+        "title" => "name",
+        "price" => "price",
+        "store" => "store",
+        "oldPrice" => "oldprice",
     ],
 
     // Models

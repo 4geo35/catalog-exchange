@@ -149,11 +149,13 @@ class ExchangeItemsActionsManager
             $this->processVariations($this->variations);
             $this->closeProgressBar();
         }
+
+        $this->clearVariations();
     }
 
     protected function processYml(): void
     {
-        if ($this->categories && false) { // TODO: remove false
+        if ($this->categories) {
             $this->setProgressBar("categories", $this->categories->count());
             $this->processYmlCategories($this->categories);
             $this->closeProgressBar();
@@ -168,6 +170,16 @@ class ExchangeItemsActionsManager
             $this->processYmlProducts($this->products);
             $this->closeProgressBar();
         }
+
+        if ($this->variations) {
+            $this->setProgressBar("variations", $this->variations->count());
+            $this->processYmlVariations($this->variations);
+            $this->closeProgressBar();
+        }
+
+        $this->clearProducts();
+        $this->clearCategories();
+        $this->clearVariations();
     }
 
     protected function initDocument(): void
