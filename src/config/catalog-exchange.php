@@ -9,6 +9,11 @@ return [
     "defaultSpecificationType" => "checkbox",
     "deleteOldItemsOnFullExchange" => false, // Если true удалит все чего не нашлось в файле, иначе снимет с публикации
     "loadImages" => false,
+    "zip" => "no",
+    "fileLimit" => "95000000",
+
+    "routeMiddlewareGroups" => ["web", "auth", "app-management"],
+    "routePrefix" => "exchange/catalog",
 
     // Import XML TODO: change to env
     // Categories
@@ -101,6 +106,8 @@ return [
     "customExchangeLoadFileActionsManager" => null,
     "customExchangeParserActionsManager" => null,
     "customExchangeItemsActionsManager" => null,
+    "customExchangeProtocolActionsManager" => null,
+    "customExchangeAuthActionsManager" => null,
 
     // Controllers
     "customAdminCmlController" => null,

@@ -4,9 +4,12 @@ namespace GIS\CatalogExchange\Facades;
 
 use GIS\CatalogExchange\Helpers\ExchangeParserActionsManager;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
+use GIS\CatalogExchange\Interfaces\CmlInterface;
 use Illuminate\Support\Facades\Facade;
 
 /**
+ * @method static string checkFileProgress(CmlInterface $cml)
+ *
  * @method static void fireParseFile(CmlFileInterface $file)
  * @method static void stopParseFile(CmlFileInterface $file)
  * @method static void launchParseFile(CmlFileInterface $file)

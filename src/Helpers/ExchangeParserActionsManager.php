@@ -7,10 +7,17 @@ use GIS\CatalogExchange\Events\FireExchangeFileEvent;
 use GIS\CatalogExchange\Events\LaunchExchangeFileEvent;
 use GIS\CatalogExchange\Events\StopExchangeFileEvent;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
+use GIS\CatalogExchange\Interfaces\CmlInterface;
 use Illuminate\Support\Facades\Log;
 
 class ExchangeParserActionsManager
 {
+    public function checkFileProgress(CmlInterface $cml): string
+    {
+//        $result =
+        return "";
+    }
+
     public function fireParseFile(CmlFileInterface $file): void
     {
         if (! $file->can_parse) {

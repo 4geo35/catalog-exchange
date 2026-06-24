@@ -79,7 +79,11 @@ class ListWire extends Component
          */
         $cmlFile->livewireFile($this->cmlFile);
 
-        // TODO: check zip files
+        if ($cmlFile->type === "zip") {
+            $this->cml->update(["is_zip" => now()]);
+            $this->cml->fresh();
+            ExchangeLoadFileActions::checkZipFiles($this->cml);
+        }
 
         $this->resetFields();
         session()->flash("cml-files-success", "Файл успешно добавлен");
@@ -107,6 +111,7 @@ class ListWire extends Component
         $model = $this->findModel();
         if (! $model) { return; }
         if (! $this->checkAuth()) { return; }
+        if (! $this->canRun($model)) { return; }
 
         try {
             $model->delete();

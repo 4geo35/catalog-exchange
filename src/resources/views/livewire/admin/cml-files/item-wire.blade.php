@@ -1,4 +1,4 @@
-<div class="card" @if (!$cmlFile->completed_at) wire:poll.2s @endif>
+<div class="card" @if ($cmlFile->started_at && !$cmlFile->completed_at) wire:poll.2s @endif>
     <div class="card-header">
         <div class="flex items-center justify-between">
             <div class="font-semibold mr-indent">{{ $item->original_name }} ({{ $item->format_size }})</div>

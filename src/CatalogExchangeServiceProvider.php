@@ -3,9 +3,11 @@
 namespace GIS\CatalogExchange;
 
 use GIS\CatalogExchange\Events\FireExchangeFileEvent;
+use GIS\CatalogExchange\Helpers\ExchangeAuthActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeItemsActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeLoadFileActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeParserActionsManager;
+use GIS\CatalogExchange\Helpers\ExchangeProtocolActionsManager;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
 use GIS\CatalogExchange\Listeners\FireProcessExchangeFileListener;
 use GIS\CatalogExchange\Models\Cml;
@@ -40,6 +42,7 @@ class CatalogExchangeServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . "/resources/views", "cexc");
 
         $this->loadRoutesFrom(__DIR__ . "/routes/admin.php");
+        $this->loadRoutesFrom(__DIR__ . "/routes/exchange.php");
 
         $this->expandConfiguration();
         $this->observeModels();
@@ -75,6 +78,16 @@ class CatalogExchangeServiceProvider extends ServiceProvider
 
         $this->app->singleton("exchange-items-actions", function () {
             $managerClass = config("catalog-exchange.customExchangeItemsActionsManager") ?? ExchangeItemsActionsManager::class;
+            return new $managerClass();
+        });
+
+        $this->app->singleton("exchange-protocol-actions", function () {
+            $managerClass = config("catalog-exchange.customExchangeProtocolActionsManager") ?? ExchangeProtocolActionsManager::class;
+            return new $managerClass();
+        });
+
+        $this->app->singleton("exchange-auth-actions", function () {
+            $managerClass = config("catalog-exchange.customExchangeAuthActionsManager") ?? ExchangeAuthActionsManager::class;
             return new $managerClass();
         });
     }
