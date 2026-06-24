@@ -11,6 +11,7 @@ return [
     "loadImages" => false,
     "zip" => "no",
     "fileLimit" => "95000000",
+    "enableExchangeProtocol" => true, // Если выключить, то при проверке прогресса 1С будет получать success, но файл не начнет обрабатываться
 
     "routeMiddlewareGroups" => ["web", "auth", "app-management"],
     "routePrefix" => "exchange/catalog",

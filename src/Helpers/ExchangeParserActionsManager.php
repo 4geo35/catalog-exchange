@@ -6,6 +6,8 @@ use GIS\CatalogExchange\Events\CompleteExchangeFileEvent;
 use GIS\CatalogExchange\Events\FireExchangeFileEvent;
 use GIS\CatalogExchange\Events\LaunchExchangeFileEvent;
 use GIS\CatalogExchange\Events\StopExchangeFileEvent;
+use GIS\CatalogExchange\Facades\ExchangeLoadFileActions;
+use GIS\CatalogExchange\Facades\ExchangeProtocolActions;
 use GIS\CatalogExchange\Interfaces\CmlFileInterface;
 use GIS\CatalogExchange\Interfaces\CmlInterface;
 use Illuminate\Support\Facades\Log;
@@ -14,8 +16,18 @@ class ExchangeParserActionsManager
 {
     public function checkFileProgress(CmlInterface $cml): string
     {
-//        $result =
-        return "";
+        $result = ExchangeLoadFileActions::checkZipFiles($cml);
+        if ($result) { return $result; }
+
+        $original = ExchangeLoadFileActions::getFileName();
+        if (! $original) { return ExchangeProtocolActions::failure("File name not found"); }
+
+        $cmlFile = $cml->files()
+            ->where("original_name", $original)
+            ->first();
+        if (! $cmlFile) { return ExchangeProtocolActions::failure("File not found"); }
+
+        return $this->freshFileProgress($cmlFile);
     }
 
     public function fireParseFile(CmlFileInterface $file): void
@@ -62,5 +74,27 @@ class ExchangeParserActionsManager
         if (empty(config($key))) { return null; }
         $str = config($key);
         return explode("->", $str);
+    }
+
+    protected function freshFileProgress(CmlFileInterface $cmlFile): string
+    {
+        $started = $cmlFile->started_at;
+        $completed = $cmlFile->completed_at;
+        if (! empty($started) && empty($completed)) {
+            // Защита от бешенной 1С
+            sleep(1);
+            return ExchangeProtocolActions::answer("progress");
+        }
+
+        if (! config("catalog-exchange.enableExchangeProtocol")) {
+            return ExchangeProtocolActions::answer("success");
+        }
+
+        if (empty($started)) {
+            $this->fireParseFile($cmlFile);
+            return ExchangeProtocolActions::answer("progress");
+        } else {
+            return ExchangeProtocolActions::answer("success");
+        }
     }
 }

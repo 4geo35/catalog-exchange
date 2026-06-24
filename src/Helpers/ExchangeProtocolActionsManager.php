@@ -4,6 +4,7 @@ namespace GIS\CatalogExchange\Helpers;
 
 use GIS\CatalogExchange\Facades\ExchangeAuthActions;
 use GIS\CatalogExchange\Facades\ExchangeLoadFileActions;
+use GIS\CatalogExchange\Facades\ExchangeParserActions;
 
 class ExchangeProtocolActionsManager
 {
@@ -31,6 +32,7 @@ class ExchangeProtocolActionsManager
                 "file_limit=" . config("catalog-exchange.fileLimit", "95000000"),
             ])),
             "file" => ExchangeLoadFileActions::modeLoadFile($cml),
+            "import" => ExchangeParserActions::checkFileProgress($cml),
             default => $this->failure("Undefined mode"),
         };
     }

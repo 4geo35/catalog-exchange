@@ -82,7 +82,8 @@ class ListWire extends Component
         if ($cmlFile->type === "zip") {
             $this->cml->update(["is_zip" => now()]);
             $this->cml->fresh();
-            ExchangeLoadFileActions::checkZipFiles($this->cml);
+            $result = ExchangeLoadFileActions::checkZipFiles($this->cml);
+            if ($result) { session()->flash("cml-files-error", $result); }
         }
 
         $this->resetFields();
