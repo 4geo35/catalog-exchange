@@ -2,6 +2,7 @@
 
 namespace GIS\CatalogExchange;
 
+use GIS\CatalogExchange\Console\Commands\ExchangeCmlFile;
 use GIS\CatalogExchange\Events\FireExchangeFileEvent;
 use GIS\CatalogExchange\Helpers\ExchangeAuthActionsManager;
 use GIS\CatalogExchange\Helpers\ExchangeItemsActionsManager;
@@ -51,6 +52,12 @@ class CatalogExchangeServiceProvider extends ServiceProvider
         $this->addLivewireComponents();
 
         $this->listenEvents();
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                ExchangeCmlFile::class
+            ]);
+        }
     }
 
     protected function expandConfiguration(): void

@@ -77,12 +77,14 @@ trait ExchangeSpecificationTrait
 
     protected function prepareSpecifications(): void
     {
+        $this->specifications = [];
+
         $specificationsMap = ExchangeParserActions::getExplodedConfig("catalog-exchange.importXmlSpecifications");
-        if (! $specificationsMap) {
-            $this->specifications = [];
-            return;
-        }
+        if (! $specificationsMap) { return; }
+
         $properties = $this->getElementByMap($this->document, $specificationsMap);
+        if (! $properties) { return; }
+
         foreach ($properties as $property) {
             $id = $this->getValueByMap(
                 $property,
@@ -105,8 +107,10 @@ trait ExchangeSpecificationTrait
     {
         $propertyValuesMap = ExchangeParserActions::getExplodedConfig("catalog-exchange.importXmlSpecificationValues");
         if (empty($propertyValuesMap)) { return []; }
+
         $propertyValues = $this->getElementByMap($element, $propertyValuesMap);
         if (empty($propertyValues)) { return []; }
+
         $values = [];
         foreach ($propertyValues as $value) {
             $id = $this->getValueByMap(

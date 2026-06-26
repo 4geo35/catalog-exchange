@@ -9,14 +9,17 @@ return [
     "defaultSpecificationType" => "checkbox",
     "deleteOldItemsOnFullExchange" => false, // Если true удалит все чего не нашлось в файле, иначе снимет с публикации
     "loadImages" => false,
+    "oldCmlsDays" => 14,
+
+
+    "enableExchangeProtocol" => true, // Если выключить, то при проверке прогресса 1С будет получать success, но файл не начнет обрабатываться
     "zip" => "no",
     "fileLimit" => "95000000",
-    "enableExchangeProtocol" => true, // Если выключить, то при проверке прогресса 1С будет получать success, но файл не начнет обрабатываться
 
     "routeMiddlewareGroups" => ["web", "auth", "app-management"],
     "routePrefix" => "exchange/catalog",
 
-    // Import XML TODO: change to env
+    // Import XML
     // Categories
     "importXmlCategories" => "Классификатор->Группы->Группа",
     "importXmlSubCategories" => "Группы->Группа",

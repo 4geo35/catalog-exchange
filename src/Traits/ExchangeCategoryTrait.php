@@ -3,6 +3,7 @@
 namespace GIS\CatalogExchange\Traits;
 
 use GIS\CatalogExchange\Facades\ExchangeParserActions;
+use GIS\CategoryProduct\Interfaces\CategoryInterface;
 use GIS\CategoryProduct\Models\Category;
 use Illuminate\Support\Str;
 use SimpleXMLElement;
@@ -22,13 +23,23 @@ trait ExchangeCategoryTrait
                     ->where("cml_id", "!=", $cmlId)
                     ->orWhereNull("cml_id");
             })
+            ->orderBy("priority", "desc")
             ->get();
         if (! $categories->count()) { return; }
 
         $this->setProgressBar("clearCategories", $categories->count());
         foreach ($categories as $category) {
+            /**
+             * @var CategoryInterface $category
+             */
             if ($this->isNeedToStop()) { break; }
-            if (config("catalog-exchange.deleteOldItemsOnFullExchange") && false) { // TODO: нужно ли удалять, это не безопасно
+            if (config("catalog-exchange.deleteOldItemsOnFullExchange")) {
+                // Убрать родителя, что бы не ругался на очистку кэша и прочие связи
+                // Это в случае если удаляется категория родитель
+                foreach ($category->children as $child) {
+                    $child->parent()->dissociate();
+                    $child->save();
+                }
                 $category->delete();
             } else {
                 $category->update([

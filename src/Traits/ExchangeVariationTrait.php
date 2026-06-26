@@ -101,6 +101,7 @@ trait ExchangeVariationTrait
             ExchangeParserActions::getExplodedConfig("catalog-exchange.offersXmlVariationPrices")
         );
         if (empty($prices)) { return null; }
+
         $result = null;
         foreach ($prices as $price) {
             $type = $this->getValueByMap(

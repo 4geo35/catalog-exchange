@@ -4,6 +4,7 @@ namespace GIS\CatalogExchange\Livewire\Admin\Cmls;
 
 use GIS\CatalogExchange\Interfaces\CmlInterface;
 use GIS\CatalogExchange\Models\Cml;
+use GIS\TraitsHelpers\Facades\BuilderActions;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -13,18 +14,36 @@ class IndexWire extends Component
 {
     use WithPagination;
 
+    public string $searchDateFrom = "";
+    public string $searchDateTo = "";
+
     public bool $displayData = false;
     public bool $displayDelete = false;
 
     public string|null $cmlId = null;
+
+    protected function queryString(): array
+    {
+        return [
+            "searchDateFrom" => ["as" => "date-from", "except" => ""],
+            "searchDateTo" => ["as" => "date-to", "except" => ""],
+        ];
+    }
 
     public function render(): View
     {
         $modelClass = config('catalog-exchange.customCmlModel') ?? Cml::class;
         $query = $modelClass::query()
             ->with("files");
+        BuilderActions::extendDate($query, $this->searchDateFrom, $this->searchDateTo);
         $cmls = $query->orderBy("created_at", "desc")->paginate();
         return view("cexc::livewire.admin.cmls.index-wire", compact("cmls"));
+    }
+
+    public function clearSearch(): void
+    {
+        $this->reset("searchDateFrom", "searchDateTo");
+        $this->resetPage();
     }
 
     public function closeData(): void
