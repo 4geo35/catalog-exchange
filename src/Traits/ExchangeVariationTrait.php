@@ -48,8 +48,12 @@ trait ExchangeVariationTrait
 
     protected function processVariations(SimpleXMLElement $variations): void
     {
+        $total = $variations->count();
         foreach ($variations as $variation) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { return; }
+            $total--;
+
             $this->processVariation($this->prepareVariation($variation));
             $this->increasePending();
         }
@@ -57,8 +61,12 @@ trait ExchangeVariationTrait
 
     protected function processYmlVariations(SimpleXMLElement $variations): void
     {
+        $total = $variations->count();
         foreach ($variations as $variation) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { return; }
+            $total--;
+
             $this->processVariation($this->prepareYmlVariation($variation));
             $this->increasePending();
         }

@@ -54,8 +54,10 @@ trait ExchangeCategoryTrait
     protected function processCategories(SimpleXMLElement $categories, string $parent = null): void
     {
         $index = 0;
+        $total = $categories->count();
         foreach ($categories as $category) {
             if ($this->isNeedToStop()) { return; }
+            if ($index >= $total) { break; }
 
             $this->processCategory($this->prepareCategory($category, $index, $parent));
             $this->increasePending();
@@ -75,8 +77,11 @@ trait ExchangeCategoryTrait
     protected function processYmlCategories(SimpleXMLElement $categories): void
     {
         $index = 0;
+        $total = $categories->count();
         foreach ($categories as $category) {
             if ($this->isNeedToStop()) { return; }
+            if ($index >= $total) { break; }
+
             $this->processCategory($this->prepareYmlCategory($category, $index));
             $this->increasePending();
             $index++;
@@ -148,8 +153,11 @@ trait ExchangeCategoryTrait
 
     protected function processCategoryParents(SimpleXMLElement $categories): void
     {
+        $total = $categories->count();
         foreach ($categories as $category) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { break; }
+            $total--;
 
             $this->processParent($this->getCategoryId($category));
             $this->increasePending();
@@ -164,8 +172,11 @@ trait ExchangeCategoryTrait
 
     protected function processYmlCategoryParents(SimpleXMLElement $categories): void
     {
+        $total = $categories->count();
         foreach ($categories as $category) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { break; }
+            $total--;
 
             $this->processParent($this->getYmlCategoryId($category));
             $this->increasePending();

@@ -51,8 +51,12 @@ trait ExchangeProductTrait
     protected function processProducts(SimpleXMLElement $products): void
     {
         $productIds = [];
+        $total = $products->count();
         foreach ($products as $product) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { return; }
+            $total--;
+
             $product = $this->processProduct($this->prepareProduct($product));
             if (! empty($product) && $this->onlyChanges) { $productIds[] = $product->id; }
             $this->increasePending();
@@ -62,8 +66,12 @@ trait ExchangeProductTrait
 
     protected function processYmlProducts(SimpleXMLElement $products): void
     {
+        $total = $products->count();
         foreach ($products as $product) {
             if ($this->isNeedToStop()) { return; }
+            if ($total <= 0) { return; }
+            $total--;
+
             $this->processProduct($this->prepareYmlProduct($product));
             $this->increasePending();
         }
