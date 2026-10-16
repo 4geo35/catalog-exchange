@@ -10,7 +10,7 @@
         }
     ],
     "require": {
-        "4geo35/product-variation": "^1.1",
+        "4geo35/product-variation": "^2.0",
         "ext-iconv": "*",
         "ext-zip": "*"
     },
