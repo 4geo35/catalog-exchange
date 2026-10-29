@@ -88,9 +88,10 @@ trait ExchangeVariationTrait
     protected function prepareYmlVariation(SimpleXMLElement $variation): object
     {
         $id = $this->getAttributeValue($variation, config("catalog-exchange.ymlXmlVariationId"));
+        $productId = $this->getAttributeValue($variation, config("catalog-exchange.ymlXmlProductId"));
         $array = [
             "id" => $id,
-            "productId" => $id,
+            "productId" => $productId,
             "available" => $this->getAttributeValue($variation, config("catalog-exchange.ymlXmlVariationAvailable")),
         ];
         foreach (config("catalog-exchange.ymlXmlVariation") as $key => $value) {
